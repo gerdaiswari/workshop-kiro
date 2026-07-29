@@ -1,0 +1,27 @@
+# Workshop runtime evidence and payloads
+results/*
+!results/.gitkeep.md
+*.zip
+
+# Application build outputs
+**/node_modules/
+**/dist/
+**/target/
+*.log
+
+# Local credentials and configuration
+.env
+.env.*
+*.pem
+*.pfx
+*.key
+*secrets*.json
+*.bak
+*.dump
+
+# Editor and operating system
+.DS_Store
+.vscode/
+.idea/
+__pycache__/
+*.pyc
