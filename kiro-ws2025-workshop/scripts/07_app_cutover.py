@@ -69,7 +69,10 @@ def main() -> int:
         "action": args.action, "source_instance_id": source, "validation_instance_id": validation,
         "target_groups": target_groups, "before": before,
         "sequence": ("register validation, wait healthy, deregister source" if args.action == "cutover" else "register source, wait healthy, deregister validation"),
-        "rollback_command": f"python3 scripts/07_app_cutover.py --action rollback --region {args.region} --profile {args.profile} --stack-name {args.stack_name}",
+        "rollback_commands": {
+            "windows": f"py -3 scripts\\07_app_cutover.py --action rollback --region {args.region} --profile {args.profile} --stack-name {args.stack_name}",
+            "linux_macos": f"python3 scripts/07_app_cutover.py --action rollback --region {args.region} --profile {args.profile} --stack-name {args.stack_name}",
+        },
     }
     print(json.dumps(plan, indent=2, default=str))
     if args.action == "plan":

@@ -1,42 +1,77 @@
-# Module 09 – MCP integration
+# Module 09 – AWS Knowledge MCP integration
 
-The project configures only the remote, unauthenticated, read-only AWS Knowledge MCP server:
+## Learning objective
+Verify that the workshop custom agent loads the read-only AWS Knowledge MCP server, then use it to check current AWS documentation without calling account APIs.
+
+## 1. Understand the configuration
+
+Both workstation-specific main agents, plus the planner and reviewer agents, contain this agent-scoped configuration:
 
 ```json
-{
-  "mcpServers": {
-    "aws-knowledge-mcp-server": {
-      "url": "https://knowledge-mcp.global.api.aws",
-      "type": "http",
-      "disabled": false
-    }
+"mcpServers": {
+  "aws-knowledge-mcp-server": {
+    "url": "https://knowledge-mcp.global.api.aws",
+    "timeout": 120000
   }
 }
 ```
 
-Check it:
+The same agents include AWS Knowledge tools in `tools` and `allowedTools`. The server provides documentation access; it does not use your AWS account credentials or replace application testing.
 
-```bash
+## 2. Verify Kiro discovers the server
+
+Run from the repository root.
+
+**Windows PowerShell:**
+
+```powershell
+kiro-cli agent validate --path .kiro\agents\windows-upgrade-windows.json
 kiro-cli mcp list workspace
-kiro-cli mcp status --name aws-knowledge-mcp-server
 ```
 
-In Kiro, ask:
+**Linux/macOS Bash:**
+
+```bash
+kiro-cli agent validate --path .kiro/agents/windows-upgrade.json
+kiro-cli mcp list workspace
+```
+
+The workspace listing should show `aws-knowledge-mcp-server` under both main agents (`windows-upgrade` and `windows-upgrade-windows`), `upgrade-planner`, and `upgrade-reviewer`.
+
+## 3. Verify the tools inside chat
+
+Start the main agent for your workstation.
+
+**Windows:** `kiro-cli chat --v3 --agent windows-upgrade-windows`
+
+**Linux/macOS:** `kiro-cli chat --v3 --agent windows-upgrade`
+
+Inside chat:
 
 ```text
-Using AWS Knowledge MCP only, find the current documentation for AWSEC2-CloneInstanceAndUpgradeWindows. Return supported 2019 upgrade targets, prerequisites, exclusions, exact parameters, and source links. Compare with .kiro/steering/aws-conventions.md and flag drift.
+/tools
+```
+
+Confirm that AWS Knowledge MCP tools are present. If the server cannot initialize, check network/proxy access and restart Kiro. Do not continue this module by inventing current AWS facts.
+
+## 4. Ask documentation questions
+
+```text
+Using AWS Knowledge MCP only, find the current documentation for
+AWSEC2-CloneInstanceAndUpgradeWindows. Return supported Windows Server 2019
+upgrade targets, prerequisites, exclusions, exact parameters, and source links.
+Compare with .kiro/steering/aws-conventions.md and flag drift.
 ```
 
 Then:
 
 ```text
-Using AWS Knowledge MCP, review infra/lab.yaml for current CloudFormation and EC2 Windows best practices. Do not call account APIs and do not edit files.
+Using AWS Knowledge MCP, review infra/lab.yaml for current CloudFormation and
+EC2 Windows best practices. Do not call account APIs and do not edit files.
 ```
 
-## Why account mutation is not enabled by default
+## Why account mutation is not enabled
 
-The managed AWS MCP Server can expose authenticated AWS operations, but enabling it changes the trust boundary and requires IAM design. This workshop uses AWS CLI scripts whose commands, inputs, outputs, and permission prompts are easy to inspect. An advanced class can add the managed AWS MCP Server with a read-only role first, then separately approve specific write tools.
+Enabling authenticated AWS operation tools changes the trust boundary and requires IAM design. This workshop keeps AWS mutations in explicit Python/AWS CLI workflows with confirmations and saved evidence. Documentation retrieval improves currency; it does not replace deterministic compatibility tests or application-owner acceptance.
 
-MCP documentation retrieval improves currency; it does not replace deterministic compatibility tests or application-owner acceptance.
-
-**Checkpoint:** Kiro retrieves current AWS facts through MCP and detects no unexplained drift.
+**Checkpoint:** `kiro-cli mcp list workspace` shows the agent-scoped server, `/tools` shows AWS Knowledge tools, and Kiro answers with current AWS source links without invoking account APIs.

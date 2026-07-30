@@ -17,16 +17,17 @@ ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = [
     "README.md", "infra/lab.yaml", "bootstrap/app01.ps1", "bootstrap/data01.ps1",
     "apps/app01/angular/dist/workshop-angular/index.html",
-    "scripts/00_deploy.sh", "scripts/lib/cache_dependency.py", "scripts/01_collect_inventory.py", "scripts/02_analyze_compatibility.py",
+    "scripts/00_deploy.sh", "scripts/lib/cache_dependency.py", "scripts/check_kiro_prereqs.py", "scripts/01_collect_inventory.py", "scripts/02_analyze_compatibility.py",
     "scripts/03_run_tests.py", "scripts/04_start_upgrade.py", "scripts/05_launch_validation.py",
     "scripts/06_compare_results.py", "scripts/07_app_cutover.py", "scripts/08_cleanup.sh",
-    ".kiro/agents/windows-upgrade.json", ".kiro/hooks/safety-gates.json",
-    ".kiro/settings/mcp.json", ".kiro/skills/windows-upgrade/SKILL.md",
+    ".kiro/agents/windows-upgrade.json", ".kiro/agents/windows-upgrade-windows.json",
+    ".kiro/agents/upgrade-planner.json",
+    ".kiro/agents/upgrade-executor.json", ".kiro/agents/upgrade-reviewer.json",
+    ".kiro/skills/windows-upgrade/SKILL.md",
     "inventory/assumed-inventory.yaml",
 ]
 VALID_HOOK_TRIGGERS = {
-    "SessionStart", "Stop", "PreToolUse", "PostToolUse", "PreTaskExec", "PostTaskExec",
-    "UserPromptSubmit", "PostFileCreate", "PostFileSave", "PostFileDelete", "Manual",
+    "agentSpawn", "userPromptSubmit", "preToolUse", "postToolUse", "stop",
 }
 
 
@@ -72,29 +73,32 @@ def main() -> int:
     except Exception as exc:
         errors.append(f"invalid Maven XML: {exc}")
 
-    shell_files = [ROOT / "setup-permissions.sh", *ROOT.glob("scripts/*.sh")]
+    shell_files = list(ROOT.glob("scripts/*.sh"))
     for path in shell_files:
         result = subprocess.run(["bash", "-n", str(path)], capture_output=True, text=True)
         if result.returncode:
             errors.append(f"invalid shell {path.relative_to(ROOT)}: {result.stderr.strip()}")
 
-    for path in [ROOT / "infra/lab.yaml", ROOT / "inventory/assumed-inventory.yaml", ROOT / "sample-permissions.yaml"]:
+    for path in [ROOT / "infra/lab.yaml", ROOT / "inventory/assumed-inventory.yaml"]:
         text = path.read_text(encoding="utf-8")
         if "\t" in text:
             errors.append(f"tab character in YAML {path.relative_to(ROOT)}")
 
-    hooks = json.loads((ROOT / ".kiro/hooks/safety-gates.json").read_text(encoding="utf-8"))
-    if hooks.get("version") != "v1":
-        errors.append("hook schema version must be v1")
-    for hook in hooks.get("hooks", []):
-        if hook.get("trigger") not in VALID_HOOK_TRIGGERS:
-            errors.append(f"invalid hook trigger: {hook.get('trigger')}")
-        if hook.get("action", {}).get("type") not in {"command", "agent"}:
-            errors.append(f"invalid hook action: {hook.get('name')}")
-
-    mcp_text = (ROOT / ".kiro/settings/mcp.json").read_text(encoding="utf-8")
-    if "@latest" in mcp_text:
-        errors.append("project MCP config must not install @latest dependencies")
+    for agent_path in sorted((ROOT / ".kiro/agents").glob("*.json")):
+        agent = json.loads(agent_path.read_text(encoding="utf-8"))
+        model = agent.get("model", "")
+        if re.fullmatch(r"claude-(?:sonnet|haiku)-4-\d{8}", model):
+            errors.append(f"obsolete model ID in {agent_path.relative_to(ROOT)}: {model}")
+        hooks = agent.get("hooks", {})
+        if hooks and not isinstance(hooks, dict):
+            errors.append(f"agent hooks must use documented object format: {agent_path.relative_to(ROOT)}")
+            continue
+        for trigger, definitions in hooks.items():
+            if trigger not in VALID_HOOK_TRIGGERS:
+                errors.append(f"unsupported hook trigger in {agent_path.relative_to(ROOT)}: {trigger}")
+            for definition in definitions:
+                if not isinstance(definition, dict) or not definition.get("command"):
+                    errors.append(f"hook requires a command in {agent_path.relative_to(ROOT)}: {trigger}")
 
     for spec in (ROOT / ".kiro/specs").iterdir():
         if spec.is_dir():
@@ -122,6 +126,21 @@ def main() -> int:
                 resolved = (path.parent / target).resolve()
                 if not resolved.exists():
                     errors.append(f"broken local link in {path.relative_to(ROOT)}: {target}")
+
+        kiro_cli = shutil.which("kiro-cli")
+        if kiro_cli:
+            for agent_path in sorted((ROOT / ".kiro/agents").glob("*.json")):
+                result = subprocess.run(
+                    [kiro_cli, "agent", "validate", "--path", str(agent_path)],
+                    cwd=ROOT,
+                    capture_output=True,
+                    text=True,
+                )
+                if result.returncode:
+                    errors.append(
+                        f"Kiro agent validation failed for {agent_path.relative_to(ROOT)}: "
+                        f"{(result.stdout + result.stderr).strip()}"
+                    )
 
         pwsh = shutil.which("pwsh")
         if pwsh:

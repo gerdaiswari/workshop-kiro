@@ -18,11 +18,13 @@ Both start from the AWS Windows Server 2019 English Full Base AMI on Nitro-based
 - **Specs:** requirements, design, tasks, and verification evidence.
 - **Steering:** persistent safety, AWS, and testing rules.
 - **Custom agent:** focused tools and conservative trust.
-- **Hooks:** block destructive AWS commands and run static checks after script edits.
+- **Multi-model agents:** strong models for planning/review, fast models for execution.
+- **Subagent pipelines:** orchestrate plan → execute → review workflows across specialized agents.
+- **Hooks:** block selected destructive shell commands and run static checks after Kiro writes files.
 - **Skills:** reusable Windows upgrade operating procedure and compatibility references.
 - **MCP:** read-only AWS Knowledge MCP for current AWS documentation.
 - **Code intelligence and subagents:** inspect scripts/apps and obtain independent reviews.
-- **Permissions:** external, user-owned allow/ask/deny rules.
+- **Tool trust:** agent `allowedTools`, tool restrictions, approval prompts, and supported hooks.
 
 ## Safety boundaries
 
@@ -35,9 +37,9 @@ Both start from the AWS Windows Server 2019 English Full Base AMI on Nitro-based
 
 ## Prerequisites
 
-- macOS/Linux workstation with Kiro CLI 3.x, AWS CLI v2, Python 3.11+, Git, and an AWS profile.
+- Windows, macOS, or Linux workstation with Kiro CLI 2.15.2+ (`kiro-cli chat --v3` selects the v3 engine), AWS CLI v2, Python 3.11+, and Git.
 - AWS permissions for CloudFormation, EC2, IAM, S3, ELBv2, and Systems Manager Automation.
-- A region with the Windows Server 2019 public AMI SSM parameter and the AWS runbook.
+- A region with the Windows Server 2019 public AMI SSM parameter and the AWS runbook (workshop defaults to us-east-1).
 - Quota for three to six Nitro Windows instances during the exercise.
 
 No RDP key pair is required.
@@ -48,7 +50,7 @@ No RDP key pair is required.
 |---|---|---:|
 | [00](modules/00-prerequisites.md) | Prerequisites, cost, assumptions | 15 min |
 | [01](modules/01-lab-setup.md) | Deploy and verify WS2019 lab | 30 min + bootstrap |
-| [02](modules/02-steering-and-permissions.md) | Configure Kiro, steering, agent, permissions | 20 min |
+| [02](modules/02-steering-and-permissions.md) | Configure Kiro, steering, agent, and tool trust | 20 min |
 | [03](modules/03-inventory-spec.md) | Inventory through SSM and Kiro Spec | 25 min |
 | [04](modules/04-compatibility-spec.md) | Compatibility analysis and remediation plan | 25 min |
 | [05](modules/05-hooks-and-safety.md) | Hooks, approvals, baseline evidence | 20 min |
@@ -57,17 +59,29 @@ No RDP key pair is required.
 | [08](modules/08-cutover-rollback-spec.md) | APP01 cutover/rollback simulation; DATA01 caveat | 20 min |
 | [09](modules/09-mcp-integration.md) | AWS Knowledge MCP exercises | 15 min |
 | [10](modules/10-skills-and-reuse.md) | Reuse for a 40-server fleet | 15 min |
+| [10B](modules/10b-agents-and-subagents.md) | Custom agents, subagents, multi-model strategies | 25 min |
 | [11](modules/11-cleanup.md) | Remove all billable resources | 10 min |
 
 ## Quick start
 
+**Linux / macOS:**
 ```bash
 cd kiro-ws2025-workshop
-aws sts get-caller-identity --profile default
+python3 scripts/check_kiro_prereqs.py
+aws sts get-caller-identity --profile default --region us-east-1
 python3 tests/static/validate_repo.py
-./scripts/00_deploy.sh --region ap-southeast-1 --profile default
-kiro-cli agent validate --path .kiro/agents/windows-upgrade.json
-kiro-cli chat --agent windows-upgrade
+./scripts/00_deploy.sh --region us-east-1 --profile default
+kiro-cli chat --v3 --agent windows-upgrade
+```
+
+**Windows (PowerShell):**
+```powershell
+cd kiro-ws2025-workshop
+py -3 scripts\check_kiro_prereqs.py
+aws sts get-caller-identity --profile default --region us-east-1
+py -3 tests\static\validate_repo.py
+.\scripts\00_deploy.ps1 -Region us-east-1 -Profile default
+kiro-cli chat --v3 --agent windows-upgrade-windows
 ```
 
 Then follow Module 02 onward. The deployment script prints stack outputs and writes non-secret state under `results/`.
@@ -78,18 +92,19 @@ Then follow Module 02 onward. The deployment script prints stack outputs and wri
 - `/health.html` – IIS baseline health
 - `/spring/actuator/health` – nginx to Spring Boot
 - `/spring/api/info` – Spring Boot sample API
-- `/next/` – nginx to Next.js
+- `/next` – nginx to Next.js
 - `/next/api/health` – Next.js API
 - `/data/api/status.php` – XAMPP/PHP status endpoint
 
 ## Costs and cleanup
 
-Pricing varies by region. The largest charges are Windows EC2 runtime, temporary upgrade instances, EBS snapshots, and the ALB. DATA01 defaults to `t3.xlarge` because it runs three database engines. Budget **USD 15–35** if both upgrades run for several hours; this is an estimate, not a quote. Run `./scripts/08_cleanup.sh` even if a module fails.
+Pricing varies by region. The largest charges are Windows EC2 runtime, temporary upgrade instances, EBS snapshots, and the ALB. DATA01 defaults to `t3.xlarge` because it runs three database engines. Budget **USD 15–35** if both upgrades run for several hours; this is an estimate, not a quote. Run `scripts/08_cleanup.sh` on Linux/macOS or `scripts\08_cleanup.ps1` on Windows even if a module fails.
 
 ## Authoritative references
 
-- [Kiro CLI Specs](https://kiro.dev/docs/cli/v3/specs/)
-- [Kiro CLI Hooks](https://kiro.dev/docs/cli/v3/hooks/)
-- [Kiro CLI Permissions](https://kiro.dev/docs/cli/v3/permissions/)
+- `kiro-cli --help-all` – installed CLI commands and global options
+- `kiro-cli chat --help` – v3, Spec mode, agents, models, effort, and trust options
+- `kiro-cli agent --help` – custom-agent management
+- Inside chat, `/guide <question>` – embedded Kiro CLI documentation
 - [AWS Knowledge MCP Server](https://awslabs.github.io/mcp/servers/aws-knowledge-mcp-server)
 - [AWSEC2-CloneInstanceAndUpgradeWindows](https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-awsec2-CloneInstanceAndUpgradeWindows.html)

@@ -1,7 +1,7 @@
 {
-  "name": "windows-upgrade",
-  "description": "Builds and reviews evidence-driven Windows Server EC2 upgrade automation without autonomously changing production.",
-  "prompt": "You are the workshop Windows upgrade engineer. Follow workspace steering and the windows-upgrade skill. Treat AWS mutations as human-approved changes. Prefer AWS-owned runbooks, clone-based validation, deterministic tests, and captured evidence. Never claim that an AMI clone synchronizes live databases or guarantees zero downtime. Do not start upgrades, switch targets, or delete resources without explicit approval in the current user turn.",
+  "name": "windows-upgrade-windows",
+  "description": "Windows-workstation version of the workshop agent, using the py -3 launcher for scripts and hooks.",
+  "prompt": "You are the workshop Windows upgrade engineer running from a Windows workstation. Follow workspace steering and the windows-upgrade skill. Use the py -3 launcher for Python commands. Treat AWS mutations as human-approved changes. Prefer AWS-owned runbooks, clone-based validation, deterministic tests, and captured evidence. Never claim that an AMI clone synchronizes live databases or guarantees zero downtime. Do not start upgrades, switch targets, or delete resources without explicit approval in the current user turn.",
   "tools": [
     "read",
     "write",
@@ -41,10 +41,10 @@
     },
     "shell": {
       "allowedCommands": [
-        "python3 tests/static/validate_repo.py*",
-        "python3 scripts/01_collect_inventory.py*",
-        "python3 scripts/02_analyze_compatibility.py*",
-        "python3 scripts/03_run_tests.py*",
+        "py -3 tests/static/validate_repo.py*",
+        "py -3 scripts/01_collect_inventory.py*",
+        "py -3 scripts/02_analyze_compatibility.py*",
+        "py -3 scripts/03_run_tests.py*",
         "aws sts get-caller-identity*",
         "aws cloudformation describe-*",
         "aws ec2 describe-*",
@@ -59,7 +59,7 @@
         "aws cloudformation delete-stack*",
         "aws ec2 delete-snapshot*",
         "aws ec2 deregister-image*",
-        "rm -rf *"
+        "Remove-Item * -Recurse*"
       ],
       "autoAllowReadonly": true,
       "denyByDefault": false
@@ -79,14 +79,14 @@
     "preToolUse": [
       {
         "matcher": "shell",
-        "command": "python3 scripts/hooks/block_destructive.py",
+        "command": "py -3 scripts\\hooks\\block_destructive.py",
         "timeout_ms": 10000
       }
     ],
     "postToolUse": [
       {
         "matcher": "write",
-        "command": "python3 tests/static/validate_repo.py --quick",
+        "command": "py -3 tests\\static\\validate_repo.py --quick",
         "timeout_ms": 30000
       }
     ]
@@ -103,5 +103,5 @@
     "file://.kiro/steering/**/*.md",
     "skill://.kiro/skills/**/SKILL.md"
   ],
-  "welcomeMessage": "Windows upgrade workshop agent ready. I will require evidence and explicit approval before AWS mutations."
+  "welcomeMessage": "Windows-workstation upgrade agent ready. I use py -3 and require approval before AWS mutations."
 }

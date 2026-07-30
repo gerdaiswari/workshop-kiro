@@ -8,4 +8,4 @@
 - [ ] 6. Record measured transition and recovery times; never call rollback instant.
 - [ ] 7. Write a production DATA01 cutover design, but execute no DATA01 cutover.
 
-> Do not use unattended `/spec run cutover-rollback` with broad tool trust.
+> Do not execute cutover tasks in unattended chat with broad tool trust. Review each target change and keep typed confirmation enabled.

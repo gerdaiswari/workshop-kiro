@@ -2,7 +2,13 @@
 
 ## Inspect and activate the skill
 
-Read `.kiro/skills/windows-upgrade/SKILL.md`. In Kiro:
+Read `.kiro/skills/windows-upgrade/SKILL.md`, then start the main agent for your workstation.
+
+**Windows:** `kiro-cli chat --v3 --agent windows-upgrade-windows`
+
+**Linux/macOS:** `kiro-cli chat --v3 --agent windows-upgrade`
+
+At the Kiro prompt:
 
 ```text
 Activate the windows-upgrade skill. Convert this two-server evidence model into a rollout plan for 40 servers without assuming they match the lab.

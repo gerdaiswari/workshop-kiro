@@ -9,4 +9,4 @@
 - [ ] 7. Run DATA01 upgrade and record outputs.
 - [ ] 8. Confirm both source instances remain healthy and still report Windows Server 2019.
 
-> Do not use unattended `/spec run clone-upgrade` with broad tool trust. Permissions must ask for the mutation.
+> Do not execute clone-upgrade tasks in unattended chat with broad tool trust. Review each mutation and keep typed confirmation enabled.

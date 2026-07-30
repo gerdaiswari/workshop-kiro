@@ -1,6 +1,19 @@
 # Module 04 – Compatibility assessment
 
-## Run deterministic rules
+## Learning objective
+Run deterministic compatibility rules, then use Kiro for evidence-based reasoning and an independent read-only review.
+
+## 1. Run deterministic rules
+
+**Windows PowerShell:**
+
+```powershell
+py -3 scripts\02_analyze_compatibility.py `
+  --inventory results\inventory\inventory.json `
+  --output-dir results\compatibility
+```
+
+**Linux/macOS Bash:**
 
 ```bash
 python3 scripts/02_analyze_compatibility.py \
@@ -8,28 +21,50 @@ python3 scripts/02_analyze_compatibility.py \
   --output-dir results/compatibility
 ```
 
-Read `results/compatibility/report.md` and `report.json`.
+Read `results/compatibility/report.md` and `results/compatibility/report.json`.
 
-## Use Kiro for reasoning, not rule substitution
+## 2. Use Kiro for reasoning, not rule substitution
 
-In Kiro:
+Start the workshop agent.
 
-```text
-Activate the windows-upgrade skill. Review the compatibility report. Separate: AWS runbook eligibility, operating-system compatibility, vendor support unknowns, application test coverage, and production cutover readiness. Cite evidence paths.
-```
+**Windows:** `kiro-cli chat --v3 --agent windows-upgrade-windows`
 
-Then use the AWS Knowledge MCP server:
+**Linux/macOS:** `kiro-cli chat --v3 --agent windows-upgrade`
 
-```text
-Using AWS Knowledge MCP, verify the currently documented supported path and prerequisites for AWSEC2-CloneInstanceAndUpgradeWindows from Windows Server 2019 to 2025. Compare them to our report and identify drift. Do not call AWS account APIs.
-```
-
-The sample analyzer should identify DATA01 as eligible for clone testing but not AMI-only live cutover.
-
-## Optional independent review
+Ask:
 
 ```text
-Delegate an independent reviewer to challenge the report for false passes, unknown vendor support, database consistency, and missing rollback evidence. Return findings only.
+Activate the windows-upgrade skill. Review the compatibility report.
+Separate AWS runbook eligibility, operating-system compatibility, vendor
+support unknowns, application test coverage, and production cutover readiness.
+Cite evidence paths. Do not modify files and do not call AWS account APIs.
 ```
 
-**Checkpoint:** no AWS prerequisite blocker, every workload has tests, and stateful cutover remains blocked by design.
+Then ask it to use the configured AWS Knowledge MCP server:
+
+```text
+Using AWS Knowledge MCP, verify the currently documented supported path and
+prerequisites for AWSEC2-CloneInstanceAndUpgradeWindows from Windows Server
+2019 to 2025. Compare them with our report and identify drift. Do not call AWS
+account APIs and do not edit files.
+```
+
+The analyzer should classify DATA01 as eligible for clone compatibility testing but not for AMI-only production cutover.
+
+## 3. Run an independent review
+
+Exit the first chat and start the read-only reviewer:
+
+```text
+kiro-cli chat --v3 --agent upgrade-reviewer
+```
+
+Ask:
+
+```text
+Challenge results/compatibility/report.md for false passes, unknown vendor
+support, database consistency risks, and missing rollback evidence.
+Return findings only; do not edit files or call AWS.
+```
+
+**Checkpoint:** no unresolved AWS prerequisite blocker exists, every workload has a test oracle, and stateful cutover remains blocked by design.

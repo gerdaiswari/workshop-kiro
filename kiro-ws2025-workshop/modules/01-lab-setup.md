@@ -2,11 +2,20 @@
 
 ## Deploy
 
+**Linux / macOS:**
 ```bash
 ./scripts/00_deploy.sh \
-  --region ap-southeast-1 \
+  --region us-east-1 \
   --profile default \
   --stack-name kiro-ws2025-lab
+```
+
+**Windows (PowerShell):**
+```powershell
+.\scripts\00_deploy.ps1 `
+  -Region us-east-1 `
+  -Profile default `
+  -StackName kiro-ws2025-lab
 ```
 
 The script:
@@ -22,37 +31,41 @@ Bootstrap can take 30–90 minutes because DATA01 installs three database engine
 
 ## Inspect outputs
 
-```bash
-aws cloudformation describe-stacks \
-  --stack-name kiro-ws2025-lab \
-  --query 'Stacks[0].Outputs' \
-  --region ap-southeast-1 --profile default
+This one-line AWS CLI command works in PowerShell and Bash:
+
+```text
+aws cloudformation describe-stacks --stack-name kiro-ws2025-lab --query "Stacks[0].Outputs" --region us-east-1 --profile default
 ```
 
 Open `http://<LoadBalancerDns>/` and test:
 
 ```text
+/
 /health.html
 /spring/actuator/health
 /spring/api/info
-/next/
+/next
 /next/api/health
 /data/api/status.php
 ```
 
 ## Verify SSM
 
-```bash
-aws ssm describe-instance-information \
-  --filters Key=tag:Project,Values=kiro-ws2025-workshop \
-  --region ap-southeast-1 --profile default
+```text
+aws ssm describe-instance-information --filters Key=tag:Project,Values=kiro-ws2025-workshop --region us-east-1 --profile default
 ```
 
 Both source instances must be `Online`. There is no RDP ingress; use Session Manager only if troubleshooting is required.
 
 ## Understand the applications
 
-Ask Kiro:
+Start Kiro from the repository root.
+
+**Windows:** `kiro-cli chat --v3 --agent windows-upgrade-windows`
+
+**Linux/macOS:** `kiro-cli chat --v3 --agent windows-upgrade`
+
+Ask:
 
 ```text
 Inspect apps/, bootstrap/, and infra/lab.yaml. Explain how each workload is built, which Windows service owns it, which endpoint proves behavior, and which external downloads make bootstrap non-hermetic. Do not make changes.
@@ -62,25 +75,30 @@ Inspect apps/, bootstrap/, and infra/lab.yaml. Explain how each workload is buil
 
 ## If deployment rolls back
 
-Extract the first failed resource and read durable bootstrap logs:
+Extract failed resources and list durable bootstrap logs. These one-line commands work in PowerShell and Bash:
 
-```bash
-aws cloudformation describe-stack-events --stack-name kiro-ws2025-lab \
-  --query "StackEvents[?contains(ResourceStatus, 'FAILED')].[Timestamp,LogicalResourceId,ResourceStatusReason]" \
-  --output table --region ap-southeast-1 --profile default
+```text
+aws cloudformation describe-stack-events --stack-name kiro-ws2025-lab --query "StackEvents[?contains(ResourceStatus, 'FAILED')].[Timestamp,LogicalResourceId,ResourceStatusReason]" --output table --region us-east-1 --profile default
 
-aws s3 ls \
-  s3://<artifact-bucket>/logs/kiro-ws2025-lab/ \
-  --recursive --region ap-southeast-1 --profile default
+aws s3 ls s3://<artifact-bucket>/logs/kiro-ws2025-lab/ --recursive --region us-east-1 --profile default
 ```
 
 A stack in `ROLLBACK_COMPLETE` cannot be updated. After reviewing the resource IDs, delete only the failed stack metadata/resources and wait before retrying:
 
+**Linux / macOS:**
 ```bash
 aws cloudformation delete-stack --stack-name kiro-ws2025-lab \
-  --region ap-southeast-1 --profile default
+  --region us-east-1 --profile default
 aws cloudformation wait stack-delete-complete --stack-name kiro-ws2025-lab \
-  --region ap-southeast-1 --profile default
+  --region us-east-1 --profile default
+```
+
+**Windows (PowerShell):**
+```powershell
+aws cloudformation delete-stack --stack-name kiro-ws2025-lab `
+  --region us-east-1 --profile default
+aws cloudformation wait stack-delete-complete --stack-name kiro-ws2025-lab `
+  --region us-east-1 --profile default
 ```
 
 The artifact bucket is intentionally outside the stack, so payloads and bootstrap diagnostics survive rollback.

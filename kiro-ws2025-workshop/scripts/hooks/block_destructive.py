@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Kiro PreToolUse hook: reject destructive shell commands.
 
-Hook context is JSON on stdin. Kiro CLI v3 blocks a PreToolUse command when
+Hook context is JSON on stdin. Kiro CLI v3 blocks a preToolUse command when
 this program exits with status 2 and returns stderr to the model.
 """
 from __future__ import annotations

@@ -1,47 +1,98 @@
-# Module 03 – Inventory with a Kiro Spec
+# Module 03 – Inventory with Kiro Spec mode
 
-## Review or recreate the Spec
+## Learning objective
+Use the v3 Spec chat mode to review requirements, design, and tasks before collecting read-only inventory from APP01 and DATA01.
 
-The repository includes an instructor-approved Spec. Resume it:
+## 1. Start Kiro in Spec mode
+
+Use the command for your workstation from the repository root:
+
+**Windows:** `kiro-cli chat --v3 --mode spec --agent windows-upgrade-windows`
+
+**Linux/macOS:** `kiro-cli chat --v3 --mode spec --agent windows-upgrade`
+
+These commands select the v3 agent engine and start its `spec` mode. Spec mode is not a separate `kiro-cli spec` command.
+
+## 2. Review the instructor-approved Spec
+
+At the Kiro prompt, enter:
 
 ```text
-/spec inventory-assessment
+Review the existing inventory-assessment Spec under .kiro/specs/.
+Explain its requirements, design, tasks, outputs, safety boundaries,
+and completion evidence to a participant who has never used Kiro.
+Do not edit files and do not call AWS.
 ```
 
-To practice from scratch, use a different name:
+The repository already contains:
 
 ```text
-/spec new participant-inventory
+.kiro/specs/inventory-assessment/requirements.md
+.kiro/specs/inventory-assessment/design.md
+.kiro/specs/inventory-assessment/tasks.md
 ```
 
-Description:
+To practice creating another Spec, remain in Spec mode and ask:
 
 ```text
-Collect read-only AWS and Windows facts for APP01 and DATA01 through SSM, redact secrets, identify unsupported Windows roles, and write normalized JSON with per-server errors.
+Create a new Spec named participant-inventory. It must collect read-only
+AWS and Windows facts for APP01 and DATA01 through SSM, redact secrets,
+identify unsupported Windows roles, and write normalized JSON with
+per-server errors. Stop after drafting requirements, design, and tasks;
+do not execute the tasks.
 ```
 
-Review requirements, design, and tasks before execution. Specs live in `.kiro/specs/<name>/` and remain editable.
+Review generated files before allowing any execution.
 
-## Collect measured inventory
+## 3. Collect measured inventory
 
-```bash
-python3 scripts/01_collect_inventory.py \
-  --region ap-southeast-1 --profile default \
+Exit Kiro, then run the deterministic inventory script.
+
+**Windows PowerShell:**
+
+```powershell
+py -3 scripts\01_collect_inventory.py `
+  --region us-east-1 --profile default `
   --stack-name kiro-ws2025-lab
 ```
 
-Review:
+**Linux/macOS Bash:**
+
+```bash
+python3 scripts/01_collect_inventory.py \
+  --region us-east-1 --profile default \
+  --stack-name kiro-ws2025-lab
+```
+
+## 4. Review the saved evidence
+
+**Windows PowerShell:**
+
+```powershell
+Get-Content results\inventory\inventory.json -Raw |
+  ConvertFrom-Json | ConvertTo-Json -Depth 20
+```
+
+**Linux/macOS Bash:**
 
 ```bash
 python3 -m json.tool results/inventory/inventory.json | less
 ```
 
-Ask Kiro:
+Start the normal workshop agent again.
+
+**Windows:** `kiro-cli chat --v3 --agent windows-upgrade-windows`
+
+**Linux/macOS:** `kiro-cli chat --v3 --agent windows-upgrade`
+
+Ask:
 
 ```text
-Compare results/inventory/inventory.json with inventory/assumed-inventory.yaml. List discrepancies, unknown dependencies, stateful components, unsupported roles, and missing test oracles. Do not modify either file.
+Compare results/inventory/inventory.json with inventory/assumed-inventory.yaml.
+List discrepancies, unknown dependencies, stateful components, unsupported
+roles, and missing test oracles. Do not modify either file and do not call AWS.
 ```
 
-Important: program and service discovery is evidence, not ownership or vendor support. Unknowns stay unknown until an owner resolves them.
+Program and service discovery is evidence, not proof of ownership or vendor support. Unknowns remain unknown until an application owner resolves them.
 
-**Checkpoint:** both servers collected successfully; workload/services/ports match the lab; no secret values are present.
+**Checkpoint:** both servers were collected successfully; services and ports match the lab; no secret values are present; and the participant can explain how Spec mode differs from script execution.
