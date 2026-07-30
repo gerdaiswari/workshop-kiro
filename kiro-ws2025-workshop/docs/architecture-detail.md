@@ -44,7 +44,7 @@ The role has no `ec2:*`, `ssm:SendCommand`, or destructive permissions. Upgrade 
 | APP01 | `t3.large` (2 vCPU, 8 GB) | 80 GB gp3 encrypted | Windows Server 2019 Full Base (latest SSM parameter) | Public A | 90 min |
 | DATA01 | `t3.xlarge` (4 vCPU, 16 GB) | 100 GB gp3 encrypted | Same | Public A | 120 min |
 
-Both use IMDSv2 (HttpTokens: required, hop limit 1). Both signal CloudFormation on bootstrap completion or failure.
+Both instances use an IAM Role (via Instance Profile) for permissions — no access keys are stored on the instances. Metadata access is hardened with IMDSv2 as a security best practice.
 
 ### Load balancer
 
