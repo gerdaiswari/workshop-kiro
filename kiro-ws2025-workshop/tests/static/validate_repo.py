@@ -107,13 +107,16 @@ def main() -> int:
                     errors.append(f"incomplete spec {spec.name}: missing {name}")
 
     secret_pattern = re.compile(r"AKIA[0-9A-Z]{16}|aws_secret_access_key\s*[:=]", re.IGNORECASE)
+    placeholder_pattern = re.compile(r"<from |<your |<replace|EXAMPLE", re.IGNORECASE)
     for path in ROOT.rglob("*"):
         if not path.is_file() or "results" in path.parts or path.suffix.lower() in {".png", ".jpg", ".zip"}:
             continue
         try: text = path.read_text(encoding="utf-8")
         except UnicodeDecodeError: continue
-        if secret_pattern.search(text):
-            errors.append(f"possible AWS secret in {path.relative_to(ROOT)}")
+        for line in text.splitlines():
+            if secret_pattern.search(line) and not placeholder_pattern.search(line):
+                errors.append(f"possible AWS secret in {path.relative_to(ROOT)}")
+                break
 
     if not args.quick:
         link_pattern = re.compile(r"\[[^\]]+\]\(([^)]+)\)")

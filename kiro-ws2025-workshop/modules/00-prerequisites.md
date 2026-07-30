@@ -90,33 +90,43 @@ Kiro workshop preflight passed
 
 If it fails, follow the printed error before continuing. Available models can differ by account or change over time; the preflight detects that condition instead of silently using an unexpected model.
 
-## 6. Configure AWS CLI credentials
+## 6. Set AWS credentials
 
-Your credentials come from the lab or workshop studio environment provided by your instructor. Configure the AWS CLI `default` profile:
+Your lab or Workshop Studio provides temporary credentials as environment variables. Copy them from the **AWS account access** panel into your terminal.
 
-```text
-aws configure --profile default
+**Linux/macOS Bash:**
+
+```bash
+export AWS_DEFAULT_REGION="us-east-1"
+export AWS_ACCESS_KEY_ID="<from lab>"
+export AWS_SECRET_ACCESS_KEY="<from lab>"
+export AWS_SESSION_TOKEN="<from lab>"
 ```
 
-Enter the values provided:
+**Windows PowerShell:**
 
-```
-AWS Access Key ID [None]: <from lab/workshop studio>
-AWS Secret Access Key [None]: <from lab/workshop studio>
-Default region name [None]: us-east-1
-Default output format [None]: json
+```powershell
+$env:AWS_DEFAULT_REGION="us-east-1"
+$env:AWS_ACCESS_KEY_ID="<from lab>"
+$env:AWS_SECRET_ACCESS_KEY="<from lab>"
+$env:AWS_SESSION_TOKEN="<from lab>"
 ```
 
-If your lab uses temporary session credentials, also set the session token:
+**Windows cmd:**
 
-```text
-aws configure set aws_session_token <token> --profile default
+```cmd
+set AWS_DEFAULT_REGION=us-east-1
+set AWS_ACCESS_KEY_ID=<from lab>
+set AWS_SECRET_ACCESS_KEY=<from lab>
+set AWS_SESSION_TOKEN=<from lab>
 ```
+
+These variables are valid for your current terminal session only. If you open a new terminal, paste them again.
 
 ## 7. Verify AWS identity
 
 ```text
-aws sts get-caller-identity --profile default --region us-east-1
+aws sts get-caller-identity
 ```
 
 Expected output (values will differ):
@@ -138,11 +148,11 @@ Confirm the account number matches your lab/sandbox account. Do not continue if 
 ```powershell
 aws ssm describe-document `
   --name AWSEC2-CloneInstanceAndUpgradeWindows `
-  --region us-east-1 --profile default
+  --region us-east-1
 
 aws ssm get-parameter `
   --name /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base `
-  --region us-east-1 --profile default
+  --region us-east-1
 ```
 
 **Linux/macOS Bash:**
@@ -150,11 +160,11 @@ aws ssm get-parameter `
 ```bash
 aws ssm describe-document \
   --name AWSEC2-CloneInstanceAndUpgradeWindows \
-  --region us-east-1 --profile default
+  --region us-east-1
 
 aws ssm get-parameter \
   --name /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base \
-  --region us-east-1 --profile default
+  --region us-east-1
 ```
 
 Expected output for the document check:
