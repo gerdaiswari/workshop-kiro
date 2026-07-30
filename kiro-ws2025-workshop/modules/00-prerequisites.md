@@ -22,7 +22,7 @@ Install these tools using their official installation instructions, then close a
 |---|---:|---|
 | Kiro CLI | 2.15.2 or later | `kiro-cli --version` |
 | AWS CLI | 2.x | `aws --version` |
-| Python | 3.11 or later | Windows: `py -3 --version`; Linux/macOS: `python3 --version` |
+| Python | 3.9 or later | Windows: `py -3 --version`; Linux/macOS: `python3 --version` |
 | Git (optional) | 2.x | `git --version` |
 
 Git is only needed if you clone the repository. If you received the workshop as a ZIP download, Git is not required.

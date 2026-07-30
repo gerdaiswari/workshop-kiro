@@ -37,7 +37,7 @@ Both start from the AWS Windows Server 2019 English Full Base AMI on Nitro-based
 
 ## Prerequisites
 
-- Windows, macOS, or Linux workstation with Kiro CLI 2.15.2+ (`kiro-cli chat --v3` selects the v3 engine), AWS CLI v2, and Python 3.11+. Git is optional (only needed if cloning the repo).
+- Windows, macOS, or Linux workstation with Kiro CLI 2.15.2+ (`kiro-cli chat --v3` selects the v3 engine), AWS CLI v2, and Python 3.9+. Git is optional (only needed if cloning the repo).
 - AWS permissions for CloudFormation, EC2, IAM, S3, ELBv2, and Systems Manager Automation.
 - A region with the Windows Server 2019 public AMI SSM parameter and the AWS runbook (workshop defaults to us-east-1).
 - Quota for three to six Nitro Windows instances during the exercise.
