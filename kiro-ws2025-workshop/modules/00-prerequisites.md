@@ -161,13 +161,9 @@ aws ssm get-parameter `
 aws ssm describe-document \
   --name AWSEC2-CloneInstanceAndUpgradeWindows \
   --region us-east-1
-
-aws ssm get-parameter \
-  --name /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base \
-  --region us-east-1
 ```
 
-Expected output for the document check:
+Expected output for the SSM document check:
 
 ```json
 {
@@ -178,6 +174,12 @@ Expected output for the document check:
         ...
     }
 }
+```
+
+```bash
+aws ssm get-parameter \
+  --name /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base \
+  --region us-east-1
 ```
 
 Expected output for the AMI parameter:
