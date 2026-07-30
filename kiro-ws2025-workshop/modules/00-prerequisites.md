@@ -143,15 +143,13 @@ Confirm the account number matches your lab/sandbox account. Do not continue if 
 
 ## 8. Confirm the AWS regional prerequisites
 
+### Check 1: Upgrade runbook exists
+
 **Windows PowerShell:**
 
 ```powershell
 aws ssm describe-document `
   --name AWSEC2-CloneInstanceAndUpgradeWindows `
-  --region us-east-1
-
-aws ssm get-parameter `
-  --name /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base `
   --region us-east-1
 ```
 
@@ -163,7 +161,7 @@ aws ssm describe-document \
   --region us-east-1
 ```
 
-Expected output for the SSM document check:
+Expected output:
 
 ```json
 {
@@ -176,13 +174,25 @@ Expected output for the SSM document check:
 }
 ```
 
+### Check 2: Windows Server 2019 AMI is available
+
+**Windows PowerShell:**
+
+```powershell
+aws ssm get-parameter `
+  --name /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base `
+  --region us-east-1
+```
+
+**Linux/macOS Bash:**
+
 ```bash
 aws ssm get-parameter \
   --name /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base \
   --region us-east-1
 ```
 
-Expected output for the AMI parameter:
+Expected output:
 
 ```json
 {
@@ -195,7 +205,7 @@ Expected output for the AMI parameter:
 }
 ```
 
-If either command fails, the region may not support the upgrade runbook or the Windows Server 2019 AMI. Contact your instructor.
+If either check fails, the region may not support the upgrade runbook or the Windows Server 2019 AMI. Contact your instructor.
 
 ## 9. AWS permissions
 
