@@ -1,5 +1,7 @@
 # Workshop architecture
 
+For the full low-level breakdown of every resource, port, service, version, and data flow, see [architecture-detail.md](architecture-detail.md).
+
 ## Logical flow
 
 ```mermaid
