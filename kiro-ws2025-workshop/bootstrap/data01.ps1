@@ -1,4 +1,8 @@
-param([string]$PayloadRoot = 'C:\Workshop\payload')
+param(
+    [string]$PayloadRoot = 'C:\Workshop\payload',
+    [Parameter(Mandatory)][string]$ArtifactBucket,
+    [string]$XamppArtifactKey = 'dependencies/xampp-windows-x64-8.2.12-0-VS16-installer.exe'
+)
 
 . "$PayloadRoot\bootstrap\common.ps1"
 New-Item -ItemType Directory -Force -Path 'C:\Workshop', 'C:\Installers', 'C:\Workshop\secrets', 'C:\Workshop\backups' | Out-Null
@@ -14,8 +18,14 @@ try {
     Write-Step 'Install XAMPP 8.2.12 for Apache and PHP'
     $xamppVersion = '8.2.12'
     $xamppInstaller = "C:\Installers\xampp-$xamppVersion.exe"
-    Invoke-Download "https://sourceforge.net/projects/xampp/files/XAMPP%20Windows/$xamppVersion/xampp-windows-x64-$xamppVersion-0-VS16-installer.exe/download" $xamppInstaller
-    Invoke-CheckedProcess $xamppInstaller '--mode unattended --unattendedmodeui none --disable-components xampp_mysql,xampp_filezilla,xampp_mercury,xampp_tomcat,xampp_webalizer,xampp_sendmail' @(0) | Out-Null
+    Write-Step "Retrieve validated XAMPP installer from s3://$ArtifactBucket/$XamppArtifactKey"
+    Read-S3Object -BucketName $ArtifactBucket -Key $XamppArtifactKey -File $xamppInstaller
+    Assert-FileIntegrity `
+        -Path $xamppInstaller `
+        -MinimumBytes 150000000 `
+        -ExpectedMagic 'MZ' `
+        -ExpectedSha256 '12E818CE5AEC79FE646606DF3A80B35DA865EC0213646AD7C92044DCFCEC7535'
+    Invoke-CheckedProcess $xamppInstaller '--mode unattended --unattendedmodeui none' @(0) | Out-Null
     if (-not (Test-Path 'C:\xampp\apache\bin\httpd.exe')) { throw 'XAMPP Apache installation not found' }
     $httpd = 'C:\xampp\apache\conf\httpd.conf'
     (Get-Content $httpd -Raw).Replace('Listen 80', 'Listen 8082').Replace('ServerName localhost:80', 'ServerName localhost:8082') | Set-Content $httpd -Encoding ASCII
@@ -27,7 +37,7 @@ try {
     Write-Step 'Install MySQL 8.0.40 ZIP distribution'
     $mysqlVersion = '8.0.40'
     $mysqlZip = "C:\Installers\mysql-$mysqlVersion-winx64.zip"
-    Invoke-Download "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-$mysqlVersion-winx64.zip" $mysqlZip
+    Invoke-Download -Uri "https://cdn.mysql.com/archives/mysql-8.0/mysql-$mysqlVersion-winx64.zip" -OutFile $mysqlZip -MinimumBytes 100000000 -ExpectedMagic 'PK'
     Expand-Archive $mysqlZip 'C:\Tools' -Force
     $mysqlRoot = "C:\Tools\mysql-$mysqlVersion-winx64"
     $mysqlData = 'C:\ProgramData\KiroMySQL\data'
@@ -72,14 +82,45 @@ port=3306
     Invoke-Download 'https://go.microsoft.com/fwlink/?linkid=866658' $sqlBootstrap
     $sqlMedia = 'C:\Installers\SqlExpressMedia'
     Invoke-CheckedProcess $sqlBootstrap "/ACTION=Download /MEDIAPATH=`"$sqlMedia`" /MEDIATYPE=Core /QUIET" @(0) | Out-Null
-    $sqlSetup = (Get-ChildItem $sqlMedia -Filter setup.exe -Recurse | Select-Object -First 1).FullName
-    if (-not $sqlSetup) { throw 'SQL Server setup.exe not found after media download' }
-    $sqlArgs = '/Q /ACTION=Install /FEATURES=SQLEngine /INSTANCENAME=SQLEXPRESS /SQLSVCACCOUNT="NT AUTHORITY\SYSTEM" /SQLSYSADMINACCOUNTS="BUILTIN\Administrators" /TCPENABLED=0 /NPENABLED=0 /UPDATEENABLED=0 /IACCEPTSQLSERVERLICENSETERMS'
-    Invoke-CheckedProcess $sqlSetup $sqlArgs @(0, 3010) | Out-Null
-    Start-Service 'MSSQL$SQLEXPRESS'
-    Start-Sleep 10
-    $connection = New-Object System.Data.SqlClient.SqlConnection 'Server=localhost\SQLEXPRESS;Integrated Security=true;TrustServerCertificate=true;'
-    $connection.Open()
+
+    $sqlPackageItem = Get-ChildItem $sqlMedia -Filter 'SQLEXPR_x64_ENU.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $sqlPackageItem) {
+        $mediaContents = @(Get-ChildItem $sqlMedia -Recurse -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }) -join '; '
+        throw "SQL Server Express media package not found. Media contents: $mediaContents"
+    }
+
+    Write-Step 'Extract SQL Server Express installation media'
+    $sqlExtract = 'C:\Installers\SqlExpressExtracted'
+    New-Item -ItemType Directory -Force -Path $sqlExtract | Out-Null
+    Invoke-CheckedProcess $sqlPackageItem.FullName "/Q /X:`"$sqlExtract`"" @(0) | Out-Null
+    $sqlSetupItem = Get-ChildItem $sqlExtract -Filter setup.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $sqlSetupItem) {
+        $extractContents = @(Get-ChildItem $sqlExtract -Recurse -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }) -join '; '
+        throw "SQL Server setup.exe not found after package extraction. Extracted contents: $extractContents"
+    }
+
+    Write-Step 'Run SQL Server Express setup'
+    $sqlArgs = '/Q /ACTION=Install /FEATURES=SQLEngine /INSTANCENAME=SQLEXPRESS /SQLSVCACCOUNT="NT AUTHORITY\SYSTEM" /SQLSVCSTARTUPTYPE=Automatic /SQLSYSADMINACCOUNTS="BUILTIN\Administrators" /TCPENABLED=0 /NPENABLED=0 /UPDATEENABLED=0 /IACCEPTSQLSERVERLICENSETERMS'
+    try {
+        Invoke-CheckedProcess $sqlSetupItem.FullName $sqlArgs @(0, 3010) | Out-Null
+    } catch {
+        $summary = Get-ChildItem 'C:\Program Files\Microsoft SQL Server\150\Setup Bootstrap\Log' -Filter Summary.txt -Recurse -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if ($summary) { Copy-Item $summary.FullName 'C:\Workshop\sqlserver-setup-summary.txt' -Force }
+        throw
+    }
+
+    $sqlService = Get-Service 'MSSQL$SQLEXPRESS' -ErrorAction Stop
+    if ($sqlService.Status -ne 'Running') { Start-Service $sqlService.Name }
+    $sqlService.WaitForStatus('Running', [TimeSpan]::FromMinutes(2))
+
+    $connection = New-Object System.Data.SqlClient.SqlConnection 'Server=localhost\SQLEXPRESS;Integrated Security=true;TrustServerCertificate=true;Connect Timeout=10;'
+    $lastSqlConnectionError = ''
+    for ($attempt = 1; $attempt -le 12 -and $connection.State -ne 'Open'; $attempt++) {
+        try { $connection.Open() }
+        catch { $lastSqlConnectionError = $_.Exception.Message; Start-Sleep 5 }
+    }
+    if ($connection.State -ne 'Open') { throw "SQL Server connection failed after 60 seconds: $lastSqlConnectionError" }
     try {
         $scriptText = Get-Content "$PayloadRoot\apps\data01\sql\sqlserver-seed.sql" -Raw
         foreach ($batch in ($scriptText -split '(?im)^\s*GO\s*$')) {
@@ -88,7 +129,11 @@ port=3306
                 [void]$command.ExecuteNonQuery()
             }
         }
-    } finally { $connection.Close() }
+        $verifyCommand = $connection.CreateCommand()
+        $verifyCommand.CommandText = "USE KiroWorkshop; SELECT CONCAT(COUNT(*), ':', SUM(Quantity), ':', MIN(CompatibilityMarker)) FROM dbo.InventoryItems"
+        $sqlSeedResult = [string]$verifyCommand.ExecuteScalar()
+        if ($sqlSeedResult -ne '3:6:DATA_OK_V1') { throw "SQL Server seed verification failed: $sqlSeedResult" }
+    } finally { $connection.Close(); $connection.Dispose() }
 
     New-NetFirewallRule -DisplayName 'Kiro workshop XAMPP from VPC' -Direction Inbound -Protocol TCP -LocalPort 8082 -Action Allow -RemoteAddress 10.42.0.0/16 -ErrorAction SilentlyContinue | Out-Null
     Wait-Http 'http://127.0.0.1:8082/data/api/status.php'

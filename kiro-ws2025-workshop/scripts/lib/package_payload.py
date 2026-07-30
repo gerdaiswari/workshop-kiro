@@ -19,7 +19,7 @@ def main() -> int:
     with ZipFile(args.output, "w", compression=ZIP_DEFLATED, compresslevel=9) as archive:
         for top in INCLUDED:
             for path in sorted((root / top).rglob("*")):
-                if path.is_file() and not any(part in {"node_modules", "target", "dist"} for part in path.parts):
+                if path.is_file() and not any(part in {"node_modules", "target"} for part in path.parts):
                     archive.write(path, path.relative_to(root).as_posix())
     print(f"Created {args.output} ({args.output.stat().st_size} bytes)")
     return 0

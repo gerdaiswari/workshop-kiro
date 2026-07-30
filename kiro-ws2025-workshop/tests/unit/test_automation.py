@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -66,6 +68,27 @@ class UpgradeOutputTests(unittest.TestCase):
 
     def test_ignores_non_ami_values(self):
         self.assertEqual(self.module.ami_candidates({"InstanceId": "i-012345"}), [])
+
+
+class DependencyCacheTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.module = load_script("cache_dependency", "lib/cache_dependency.py")
+
+    def test_accepts_expected_magic_size_and_sha256(self):
+        content = b"MZ" + (b"binary" * 20)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "installer.exe"
+            path.write_bytes(content)
+            self.module.validate_file(path, len(content), b"MZ", hashlib.sha256(content).hexdigest())
+
+    def test_rejects_html_masquerading_as_installer(self):
+        content = b"<!doctype html>download page"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "installer.exe"
+            path.write_bytes(content)
+            with self.assertRaisesRegex(ValueError, "file magic"):
+                self.module.validate_file(path, 1, b"MZ", hashlib.sha256(content).hexdigest())
 
 
 if __name__ == "__main__":

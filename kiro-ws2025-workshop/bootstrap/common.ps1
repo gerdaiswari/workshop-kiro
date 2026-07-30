@@ -10,24 +10,81 @@ function Write-Step {
     Add-Content -Path 'C:\Workshop\bootstrap.log' -Value $line
 }
 
+function Assert-FileIntegrity {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [long]$MinimumBytes = 1024,
+        [string]$ExpectedMagic = '',
+        [string]$ExpectedSha256 = ''
+    )
+    if (-not (Test-Path $Path -PathType Leaf)) { throw "File does not exist: $Path" }
+    $file = Get-Item $Path
+    if ($file.Length -lt $MinimumBytes) { throw "File is too small: $($file.Length) bytes; expected at least $MinimumBytes" }
+    if ($ExpectedMagic) {
+        $stream = [IO.File]::OpenRead($Path)
+        try {
+            $bytes = New-Object byte[] $ExpectedMagic.Length
+            [void]$stream.Read($bytes, 0, $bytes.Length)
+            $actualMagic = [Text.Encoding]::ASCII.GetString($bytes)
+        } finally { $stream.Dispose() }
+        if ($actualMagic -ne $ExpectedMagic) { throw "File signature '$actualMagic' does not match expected '$ExpectedMagic'" }
+    }
+    if ($ExpectedSha256) {
+        $actualSha256 = (Get-FileHash -Path $Path -Algorithm SHA256).Hash
+        if ($actualSha256 -ne $ExpectedSha256) { throw "File SHA-256 '$actualSha256' does not match expected '$ExpectedSha256'" }
+    }
+}
+
 function Invoke-Download {
     param(
         [Parameter(Mandatory)][string]$Uri,
         [Parameter(Mandatory)][string]$OutFile,
-        [int]$Attempts = 4
+        [int]$Attempts = 4,
+        [long]$MinimumBytes = 1024,
+        [string]$ExpectedMagic = ''
     )
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $OutFile) | Out-Null
     for ($attempt = 1; $attempt -le $Attempts; $attempt++) {
         try {
+            Remove-Item $OutFile -Force -ErrorAction SilentlyContinue
             Write-Step "Download $Uri (attempt $attempt/$Attempts)"
             Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $OutFile -MaximumRedirection 10
-            if ((Get-Item $OutFile).Length -lt 1024) { throw "Downloaded file is unexpectedly small" }
+            $file = Get-Item $OutFile
+            if ($file.Length -lt $MinimumBytes) { throw "Downloaded file is too small: $($file.Length) bytes; expected at least $MinimumBytes" }
+            if ($ExpectedMagic) {
+                $stream = [IO.File]::OpenRead($OutFile)
+                try {
+                    $bytes = New-Object byte[] $ExpectedMagic.Length
+                    [void]$stream.Read($bytes, 0, $bytes.Length)
+                    $actualMagic = [Text.Encoding]::ASCII.GetString($bytes)
+                } finally { $stream.Dispose() }
+                if ($actualMagic -ne $ExpectedMagic) { throw "Downloaded file signature '$actualMagic' does not match expected '$ExpectedMagic'" }
+            }
             return
         } catch {
+            Remove-Item $OutFile -Force -ErrorAction SilentlyContinue
+            Write-Step "Download rejected: $($_.Exception.Message)"
             if ($attempt -eq $Attempts) { throw }
             Start-Sleep -Seconds (10 * $attempt)
         }
     }
+}
+
+function Invoke-DownloadWithFallback {
+    param(
+        [Parameter(Mandatory)][string[]]$Uris,
+        [Parameter(Mandatory)][string]$OutFile,
+        [long]$MinimumBytes = 1024,
+        [string]$ExpectedMagic = ''
+    )
+    $failures = @()
+    foreach ($uri in $Uris) {
+        try {
+            Invoke-Download -Uri $uri -OutFile $OutFile -Attempts 2 -MinimumBytes $MinimumBytes -ExpectedMagic $ExpectedMagic
+            return
+        } catch { $failures += "$uri => $($_.Exception.Message)" }
+    }
+    throw "All download mirrors failed: $($failures -join ' | ')"
 }
 
 function Invoke-CheckedProcess {

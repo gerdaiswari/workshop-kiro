@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Kiro Windows Upgrade Workshop</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 2em; background: #f8f9fa; color: #212529; }
+    main { max-width: 640px; margin: 0 auto; background: #fff; border-radius: 8px; padding: 2em; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+    h1 { color: #232f3e; }
+    dl { display: grid; grid-template-columns: auto 1fr; gap: .5em 1em; }
+    dt { font-weight: 600; }
+    nav { margin-top: 1.5em; display: flex; gap: 1em; }
+    a { color: #0073bb; }
+  </style>
+</head>
+<body>
+  <main data-testid="angular-workshop">
+    <h1>Kiro Windows Upgrade Workshop</h1>
+    <p>Angular application hosted by IIS on APP01.</p>
+    <dl>
+      <dt>Application</dt><dd>kiro-workshop-angular</dd>
+      <dt>Compatibility marker</dt><dd id="compatibility-marker">ANGULAR_OK_V1</dd>
+    </dl>
+    <nav>
+      <a href="/spring/api/info">Spring Boot API</a>
+      <a href="/next">Next.js application</a>
+      <a href="/data/api/status.php">PHP status</a>
+    </nav>
+  </main>
+</body>
+</html>

@@ -7,6 +7,9 @@ Parameters:
   ArtifactKey:
     Type: String
     Default: payload/workshop-payload.zip
+  XamppArtifactKey:
+    Type: String
+    Default: dependencies/xampp-windows-x64-8.2.12-0-VS16-installer.exe
   Windows2019Ami:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base
@@ -132,7 +135,12 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: s3:GetObject
-                Resource: !Sub 'arn:${AWS::Partition}:s3:::${ArtifactBucketName}/${ArtifactKey}'
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:s3:::${ArtifactBucketName}/${ArtifactKey}'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${ArtifactBucketName}/${XamppArtifactKey}'
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${ArtifactBucketName}/logs/*'
               - Effect: Allow
                 Action: cloudformation:SignalResource
                 Resource: !Ref AWS::StackId
@@ -187,6 +195,11 @@ Resources:
             $exitCode = 1
             $_ | Out-String | Set-Content C:\Workshop\userdata-error.txt
           }
+          foreach ($log in @('C:\Workshop\userdata-error.txt','C:\Workshop\bootstrap-error.txt','C:\Workshop\bootstrap.log','C:\Workshop\app01-bootstrap-transcript.log','C:\Workshop\bootstrap-status.json')) {
+            if (Test-Path $log) {
+              try { Write-S3Object -BucketName '${ArtifactBucketName}' -Key "logs/${AWS::StackName}/AppInstance/$(Split-Path $log -Leaf)" -File $log } catch { }
+            }
+          }
           & 'C:\Program Files\Amazon\cfn-bootstrap\cfn-signal.exe' -e $exitCode --stack '${AWS::StackName}' --resource AppInstance --region '${AWS::Region}'
           exit $exitCode
           </powershell>
@@ -228,10 +241,18 @@ Resources:
           try {
             Read-S3Object -BucketName '${ArtifactBucketName}' -Key '${ArtifactKey}' -File C:\Workshop\payload.zip
             Expand-Archive C:\Workshop\payload.zip C:\Workshop\payload -Force
-            & C:\Workshop\payload\bootstrap\data01.ps1 -PayloadRoot C:\Workshop\payload
+            & C:\Workshop\payload\bootstrap\data01.ps1 `
+              -PayloadRoot C:\Workshop\payload `
+              -ArtifactBucket '${ArtifactBucketName}' `
+              -XamppArtifactKey '${XamppArtifactKey}'
           } catch {
             $exitCode = 1
             $_ | Out-String | Set-Content C:\Workshop\userdata-error.txt
+          }
+          foreach ($log in @('C:\Workshop\userdata-error.txt','C:\Workshop\bootstrap-error.txt','C:\Workshop\bootstrap.log','C:\Workshop\data01-bootstrap-transcript.log','C:\Workshop\sqlserver-setup-summary.txt','C:\Workshop\bootstrap-status.json')) {
+            if (Test-Path $log) {
+              try { Write-S3Object -BucketName '${ArtifactBucketName}' -Key "logs/${AWS::StackName}/DataInstance/$(Split-Path $log -Leaf)" -File $log } catch { }
+            }
           }
           & 'C:\Program Files\Amazon\cfn-bootstrap\cfn-signal.exe' -e $exitCode --stack '${AWS::StackName}' --resource DataInstance --region '${AWS::Region}'
           exit $exitCode

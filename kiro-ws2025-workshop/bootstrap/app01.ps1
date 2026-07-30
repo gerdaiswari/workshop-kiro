@@ -41,14 +41,8 @@ try {
     $env:JAVA_HOME = $javaHome
     $env:Path = "$javaHome\bin;$env:Path"
 
-    Write-Step 'Build Angular and publish to IIS'
+    Write-Step 'Deploy pre-built Angular to IIS'
     $angular = "$PayloadRoot\apps\app01\angular"
-    Push-Location $angular
-    & npm.cmd install --no-audit --no-fund
-    if ($LASTEXITCODE -ne 0) { throw 'Angular npm install failed' }
-    & npm.cmd run build
-    if ($LASTEXITCODE -ne 0) { throw 'Angular build failed' }
-    Pop-Location
     Remove-Item 'C:\inetpub\wwwroot\*' -Recurse -Force -ErrorAction SilentlyContinue
     Copy-Item "$angular\dist\workshop-angular\*" 'C:\inetpub\wwwroot' -Recurse -Force
     Set-Content 'C:\inetpub\wwwroot\health.html' '<html><body>IIS_OK_V1</body></html>' -Encoding UTF8
@@ -56,11 +50,19 @@ try {
     Write-Step 'Build Next.js'
     $next = "$PayloadRoot\apps\app01\next"
     Push-Location $next
-    & npm.cmd install --no-audit --no-fund
+    $env:NODE_OPTIONS = '--max-old-space-size=4096'
+    & npm.cmd install --no-audit --no-fund --legacy-peer-deps
     if ($LASTEXITCODE -ne 0) { throw 'Next npm install failed' }
     & npm.cmd run build
     if ($LASTEXITCODE -ne 0) { throw 'Next build failed' }
+    $env:NODE_OPTIONS = ''
     Pop-Location
+    # Standalone mode requires static assets copied into the standalone directory
+    $standaloneStatic = "$next\.next\standalone\.next\static"
+    if (Test-Path "$next\.next\static") {
+        New-Item -ItemType Directory -Force -Path $standaloneStatic | Out-Null
+        Copy-Item "$next\.next\static\*" $standaloneStatic -Recurse -Force
+    }
 
     Write-Step 'Build Spring Boot'
     $spring = "$PayloadRoot\apps\app01\spring"
@@ -85,7 +87,7 @@ http {
     server_name _;
     location = /health { default_type application/json; return 200 '{"status":"ok","marker":"NGINX_OK_V1"}'; }
     location /spring/ { proxy_set_header Host `$host; proxy_pass http://127.0.0.1:8080/; }
-    location /next/ { proxy_set_header Host `$host; proxy_pass http://127.0.0.1:3000; }
+    location /next { proxy_set_header Host `$host; proxy_pass http://127.0.0.1:3000; }
   }
 }
 "@
@@ -93,14 +95,18 @@ http {
 
     Write-Step 'Install WinSW services'
     $services = @(
-        @{ Name='KiroSpring'; Executable="$javaHome\bin\java.exe"; Arguments="-jar `"$jar`""; Working=$spring },
-        @{ Name='KiroNext'; Executable='C:\Windows\System32\cmd.exe'; Arguments='/c ""C:\Program Files\nodejs\npm.cmd" run start"'; Working=$next },
-        @{ Name='nginx'; Executable="$nginxRoot\nginx.exe"; Arguments=''; Working=$nginxRoot }
+        @{ Name='KiroSpring'; Executable="$javaHome\bin\java.exe"; Arguments="-jar `"$jar`""; Working=$spring; Env=@() },
+        @{ Name='KiroNext'; Executable='C:\Program Files\nodejs\node.exe'; Arguments=".next\standalone\server.js"; Working=$next; Env=@(@{name='PORT';value='3000'},@{name='HOSTNAME';value='0.0.0.0'}) },
+        @{ Name='nginx'; Executable="$nginxRoot\nginx.exe"; Arguments=''; Working=$nginxRoot; Env=@() }
     )
     foreach ($service in $services) {
         $dir = "C:\Services\$($service.Name)"
         New-Item -ItemType Directory -Force -Path $dir | Out-Null
         Copy-Item $winsw "$dir\$($service.Name).exe" -Force
+        $envXml = ''
+        foreach ($envVar in $service.Env) {
+            $envXml += "`n  <env name=`"$($envVar.name)`" value=`"$($envVar.value)`" />"
+        }
         $xml = @"
 <service>
   <id>$($service.Name)</id>
@@ -112,7 +118,7 @@ http {
   <logpath>C:\Workshop\logs\$($service.Name)</logpath>
   <log mode="roll" />
   <startmode>Automatic</startmode>
-  <onfailure action="restart" delay="10 sec" />
+  <onfailure action="restart" delay="10 sec" />$envXml
 </service>
 "@
         Set-Content "$dir\$($service.Name).xml" $xml -Encoding UTF8

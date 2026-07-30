@@ -6,6 +6,9 @@ results/*
 # Application build outputs
 **/node_modules/
 **/dist/
+!apps/app01/angular/dist/
+!apps/app01/angular/dist/workshop-angular/
+!apps/app01/angular/dist/workshop-angular/index.html
 **/target/
 *.log
 

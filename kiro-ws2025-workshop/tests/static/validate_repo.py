@@ -16,7 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = [
     "README.md", "infra/lab.yaml", "bootstrap/app01.ps1", "bootstrap/data01.ps1",
-    "scripts/00_deploy.sh", "scripts/01_collect_inventory.py", "scripts/02_analyze_compatibility.py",
+    "apps/app01/angular/dist/workshop-angular/index.html",
+    "scripts/00_deploy.sh", "scripts/lib/cache_dependency.py", "scripts/01_collect_inventory.py", "scripts/02_analyze_compatibility.py",
     "scripts/03_run_tests.py", "scripts/04_start_upgrade.py", "scripts/05_launch_validation.py",
     "scripts/06_compare_results.py", "scripts/07_app_cutover.py", "scripts/08_cleanup.sh",
     ".kiro/agents/windows-upgrade.json", ".kiro/hooks/safety-gates.json",
@@ -46,6 +47,19 @@ def main() -> int:
             json.loads(path.read_text(encoding="utf-8"))
         except Exception as exc:
             errors.append(f"invalid JSON {path.relative_to(ROOT)}: {exc}")
+
+    data_bootstrap = (ROOT / "bootstrap/data01.ps1").read_text(encoding="utf-8")
+    for required_sql_fragment in (
+        "SQLEXPR_x64_ENU.exe",
+        "Extract SQL Server Express installation media",
+        "/Q /X:",
+        "Get-ChildItem $sqlExtract -Filter setup.exe",
+        "SQLSVCSTARTUPTYPE=Automatic",
+    ):
+        if required_sql_fragment not in data_bootstrap:
+            errors.append(f"DATA01 SQL bootstrap missing: {required_sql_fragment}")
+    if "Get-ChildItem $sqlMedia -Filter setup.exe" in data_bootstrap:
+        errors.append("DATA01 must extract SQLEXPR_x64_ENU.exe before searching for setup.exe")
 
     for path in ROOT.rglob("*.py"):
         try:
