@@ -2,7 +2,7 @@
 
 Build two representative Windows Server 2019 EC2 servers, use Kiro CLI to inventory and assess them, create repeatable tests, clone-upgrade them with the AWS-owned Systems Manager runbook, and validate Windows Server 2025 copies before an APP01-only cutover simulation.
 
-> **Purpose:** Demonstrate how Kiro assists engineers. AWS Systems Manager performs the OS upgrade; deterministic scripts and tests decide pass/fail; a human authorizes AWS mutations.
+> **Purpose:** Demonstrate how Kiro assists engineers. AWS Systems Manager performs the OS upgrade; deterministic scripts and tests decide pass/fail; you approve every AWS change before it runs.
 
 ## What the lab builds
 
@@ -34,6 +34,13 @@ Both start from the AWS Windows Server 2019 English Full Base AMI on Nitro-based
 4. DATA01's upgraded AMI is a point-in-time **compatibility copy**, not a production database cutover solution. Real database cutover requires replication or a controlled write outage and final restore.
 5. Only APP01 has an optional ALB target switch exercise. Rollback is not called “instant”; it includes target health and application recovery time.
 6. No domain controllers, failover clusters, RDSH/RDCB/RDVH/RDWA roles, or BYOL media are used.
+
+## Architecture overview
+
+Before starting, review the lab infrastructure and application design:
+
+- [Architecture overview](docs/architecture.md) — logical flow, AWS resources, application layout, and cutover boundary
+- [Detailed architecture](docs/architecture-detail.md) — exact versions, ports, services, data flow, and directory layout on each instance
 
 ## Prerequisites
 

@@ -29,29 +29,26 @@ Git is only needed if you clone the repository. If you received the workshop as 
 
 The executable is **`kiro-cli`**, not `kiro`.
 
-## 3. Understand the v3 command
+## 3. Two ways to work: Vibe mode and Spec mode
 
-Kiro CLI 2.15.2 exposes the next-generation agent through the `--v3` chat option. Use this verified syntax:
+Kiro has two modes you'll use in this workshop:
+
+| Mode | What it does | When to use |
+|---|---|---|
+| **Vibe** (default) | You chat freely, Kiro executes tasks directly | Running scripts, exploring, asking questions, fixing issues |
+| **Spec** | Kiro creates a structured plan (requirements → design → tasks) before acting | Planning upgrades, designing test strategies, defining change scope |
+
+Start Vibe mode:
 
 ```text
 kiro-cli chat --v3
 ```
 
-The workshop uses a workstation-specific main agent so its hooks call the correct Python launcher:
+Start Spec mode:
 
-| Workstation | Start normal mode |
-|---|---|
-| Windows | `kiro-cli chat --v3 --agent windows-upgrade-windows` |
-| Linux/macOS | `kiro-cli chat --v3 --agent windows-upgrade` |
-
-Spec mode is a chat mode, not a separate `kiro-cli spec` command:
-
-| Workstation | Start Spec mode |
-|---|---|
-| Windows | `kiro-cli chat --v3 --mode spec --agent windows-upgrade-windows` |
-| Linux/macOS | `kiro-cli chat --v3 --mode spec --agent windows-upgrade` |
-
-Do not use `kiro`, `kiro config`, or `kiro-cli spec`; those commands are not used by this workshop.
+```text
+kiro-cli chat --v3 --mode spec
+```
 
 ## 4. Open the repository
 
@@ -93,19 +90,48 @@ Kiro workshop preflight passed
 
 If it fails, follow the printed error before continuing. Available models can differ by account or change over time; the preflight detects that condition instead of silently using an unexpected model.
 
-## 6. Verify AWS identity
+## 6. Configure AWS CLI credentials
 
-Configure an AWS CLI profile before continuing. This workshop uses `default` and region `us-east-1` in its examples.
+Your credentials come from the lab or workshop studio environment provided by your instructor. Configure the AWS CLI `default` profile:
 
-**Windows PowerShell and Linux/macOS Bash:**
+```text
+aws configure --profile default
+```
+
+Enter the values provided:
+
+```
+AWS Access Key ID [None]: <from lab/workshop studio>
+AWS Secret Access Key [None]: <from lab/workshop studio>
+Default region name [None]: us-east-1
+Default output format [None]: json
+```
+
+If your lab uses temporary session credentials, also set the session token:
+
+```text
+aws configure set aws_session_token <token> --profile default
+```
+
+## 7. Verify AWS identity
 
 ```text
 aws sts get-caller-identity --profile default --region us-east-1
 ```
 
-Confirm that the returned account and principal are the sandbox identity you intend to use. Do not continue if it shows a production account.
+Expected output (values will differ):
 
-## 7. Confirm the AWS regional prerequisites
+```json
+{
+    "UserId": "AROAEXAMPLEID:workshop-user",
+    "Account": "123456789012",
+    "Arn": "arn:aws:sts::123456789012:assumed-role/WorkshopRole/workshop-user"
+}
+```
+
+Confirm the account number matches your lab/sandbox account. Do not continue if it shows a production account.
+
+## 8. Confirm the AWS regional prerequisites
 
 **Windows PowerShell:**
 
@@ -131,21 +157,50 @@ aws ssm get-parameter \
   --region us-east-1 --profile default
 ```
 
-## 8. AWS permissions
+Expected output for the document check:
+
+```json
+{
+    "Document": {
+        "Name": "AWSEC2-CloneInstanceAndUpgradeWindows",
+        "DocumentType": "Automation",
+        "Status": "Active",
+        ...
+    }
+}
+```
+
+Expected output for the AMI parameter:
+
+```json
+{
+    "Parameter": {
+        "Name": "/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base",
+        "Type": "String",
+        "Value": "ami-0xxxxxxxxxxxxxxxxx",
+        ...
+    }
+}
+```
+
+If either command fails, the region may not support the upgrade runbook or the Windows Server 2019 AMI. Contact your instructor.
+
+## 9. AWS permissions
 
 The deployer needs permissions for CloudFormation, EC2, IAM, S3, Elastic Load Balancing v2, and Systems Manager. The identity that starts `AWSEC2-CloneInstanceAndUpgradeWindows` also needs its documented image, temporary-instance, volume, tagging, and instance-profile permissions.
 
 Use a dedicated sandbox account. Kiro tool approval is an additional safety control; it does not replace IAM.
 
-## 9. Cost and time
+## 10. Cost estimation
 
 Budget approximately USD 15–35 for a complete run, depending on runtime and current regional prices. Each clone-upgrade can take about two hours and creates billable temporary resources. Delete lab resources when you stop the workshop.
+
+> **Disclaimer:** This estimate applies only to this workshop lab. If you implement the upgrade method in your own environment, costs will vary based on instance sizes, storage, data transfer, number of servers, and how long resources remain running. Use the [AWS Pricing Calculator](https://calculator.aws/) for your own estimate.
 
 ## Non-goals
 
 - No production data, domain joins, certificates, or external integrations.
 - No proof of third-party vendor certification.
 - No database production cutover.
-- No guarantee that the same scripts cover all 40 real servers.
 
-**Checkpoint:** the Kiro preflight passes, the AWS identity is the intended sandbox, both regional checks succeed, and the participant accepts the time and cost.
+**Checkpoint:** the Kiro preflight passes, `aws sts get-caller-identity` shows the intended sandbox account, both regional checks succeed, and the participant accepts the time and cost.
