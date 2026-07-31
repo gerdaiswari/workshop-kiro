@@ -4,6 +4,8 @@
 
 Create your own reviewer and executor agents, assign models that are actually available to your account, validate their schemas, and let your main agent delegate a read-only review through subagents.
 
+> **Schedule position:** this is the final learning activity during the Module 06 upgrade wait. When finished, check both upgrade terminals. Continue to Module 07 only after both report `Success` and produce upgraded AMI IDs.
+
 ## 1. Discover models before configuring them
 
 Model availability and credit multipliers can change by account. List the models available now:

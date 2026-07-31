@@ -4,6 +4,8 @@
 
 Configure an MCP server yourself, expose its tools to the agent you created, verify discovery, and use it for current AWS documentation without calling your AWS account APIs.
 
+> **Schedule position:** complete this module while the two Module 06 upgrade terminals continue polling. Do not stop or reuse those terminals. Continue to Module 10 afterward.
+
 ## 1. Understand why MCP is needed
 
 A language model may have stale AWS product knowledge. The read-only AWS Knowledge MCP server lets Kiro retrieve current AWS documentation and source links.

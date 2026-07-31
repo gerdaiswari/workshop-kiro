@@ -4,6 +4,8 @@
 
 Create a Kiro skill yourself, attach it to your custom agent, activate it in a real planning task, and understand how a skill differs from steering and an agent prompt.
 
+> **Schedule position:** complete this module while Module 06 upgrades run in their original terminals. Continue to Module 10B afterward.
+
 ## 1. Understand the difference
 
 | Feature | Scope | Best use |

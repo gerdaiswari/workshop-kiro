@@ -3,6 +3,8 @@
 ## Learning objective
 Launch Windows Server 2025 validation copies, compare them with the baseline, inject a controlled APP01 failure, and prove the tests detect and recover from it.
 
+> **Entry gate:** return here after Modules 09, 10, and 10B only when both Module 06 upgrade scripts report `Success` and `results/upgrades/APP01.json` plus `results/upgrades/DATA01.json` contain `upgraded_ami_id`. If either upgrade is still running, continue monitoring; do not bypass the evidence.
+
 ## 1. Launch validation copies
 
 Each command requires approval, launches from a recorded upgraded AMI, enforces IMDSv2, waits for EC2 and SSM readiness, and records the new instance ID.

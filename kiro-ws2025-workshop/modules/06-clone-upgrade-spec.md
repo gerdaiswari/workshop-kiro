@@ -23,7 +23,7 @@ Do not call AWS and do not edit files.
 
 Do not run upgrade tasks unattended or with `--trust-all-tools`. The deterministic script below requires typed confirmation for each server.
 
-## 2. Upgrade APP01
+## 2. Start APP01 in terminal 1
 
 **Windows PowerShell:**
 
@@ -43,7 +43,7 @@ python3 scripts/04_start_upgrade.py \
   --stack-name kiro-ws2025-lab
 ```
 
-Type `APP01` when prompted. The script polls to a terminal status and saves `results/upgrades/APP01.json`.
+Type `APP01` when prompted. Keep this terminal open: the script polls until the automation reaches a terminal state and continuously updates `results/upgrades/APP01.json`.
 
 The expected runbook inputs include:
 
@@ -56,9 +56,9 @@ KeepPreUpgradeImageBackUp=True
 RebootInstanceBeforeTakingImage=False
 ```
 
-## 3. Upgrade DATA01 separately
+## 3. Start DATA01 in terminal 2
 
-Continue only after APP01 completes and DATA01 native backup evidence passes.
+Open a **separate terminal** in the repository root. Start DATA01 only after its baseline and native-backup evidence pass. It does not need to wait for APP01 to finish because the two executions target different source instances and write separate evidence files.
 
 **Windows PowerShell:**
 
@@ -77,6 +77,18 @@ python3 scripts/04_start_upgrade.py \
   --region us-east-1 \
   --stack-name kiro-ws2025-lab
 ```
+
+Type `DATA01` when prompted and keep this terminal open. Running both automations concurrently consumes more temporary EC2/EBS capacity, so confirm the workshop account quota and facilitator instruction before starting.
+
+### Continue learning while the upgrades run
+
+After both terminals show an automation execution ID/status, take the scheduled break and then continue in a third terminal:
+
+1. [Module 09](09-mcp-integration.md) — add AWS Knowledge MCP.
+2. [Module 10](10-skills-and-reuse.md) — create a reusable skill.
+3. [Module 10B](10b-agents-and-subagents.md) — create specialized agents and use subagents.
+
+Periodically inspect both upgrade terminals. Do **not** continue to Module 07 until both scripts report `Success` and both evidence files contain an `upgraded_ami_id`.
 
 ## 4. Inspect an execution
 

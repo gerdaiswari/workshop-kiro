@@ -53,21 +53,43 @@ No RDP key pair is required.
 
 ## Workshop path
 
-| Module | Topic | Active time |
-|---|---|---:|
-| [00](modules/00-prerequisites.md) | Prerequisites, cost, assumptions | 15 min |
-| [01](modules/01-lab-setup.md) | Deploy and verify WS2019 lab | 30 min + bootstrap |
-| [02](modules/02-steering-and-permissions.md) | Create steering, an agent, and tool permissions | 30 min |
-| [03](modules/03-inventory-spec.md) | Inventory through SSM and Kiro Spec | 25 min |
-| [04](modules/04-compatibility-spec.md) | Compatibility analysis and evidence challenge | 25 min |
-| [05](modules/05-hooks-and-safety.md) | Create hooks, test safety, capture baselines | 30 min |
-| [06](modules/06-clone-upgrade-spec.md) | Start and monitor clone upgrades | 30 min active + up to 4 hr wait |
-| [07](modules/07-validation-spec.md) | Launch WS2025 copies, test, inject and fix failure | 35 min |
-| [08](modules/08-cutover-rollback-spec.md) | APP01 cutover/rollback simulation; DATA01 caveat | 20 min |
-| [09](modules/09-mcp-integration.md) | Add and use AWS Knowledge MCP | 20 min |
-| [10](modules/10-skills-and-reuse.md) | Create a reusable skill and fleet plan | 25 min |
-| [10B](modules/10b-agents-and-subagents.md) | Create specialized agents, models, and subagents | 35 min |
-| [11](modules/11-cleanup.md) | Remove all billable resources | 10 min |
+Modules 00–01 and the plain-Kiro introduction are completed before the facilitated hands-on begins. During the long-running upgrade, participants continue with read-only/low-risk Kiro feature modules, then return to validation and cutover.
+
+| Order | Module | Topic | Timing |
+|---:|---|---|---:|
+| Pre-work | [00](modules/00-prerequisites.md) | Prerequisites, credentials, regional checks, and cost | Before 14:30 |
+| Pre-work | [01](modules/01-lab-setup.md) | Deploy and verify the Windows Server 2019 lab | Before 14:30 |
+| 1 | [02](modules/02-steering-and-permissions.md) | Create steering, an agent, and tool permissions | 20 min |
+| 2 | [03](modules/03-inventory-spec.md) | Inventory through SSM and Kiro Spec | 15 min |
+| 3 | [04](modules/04-compatibility-spec.md) | Compatibility analysis and evidence challenge | 10 min |
+| 4 | [05](modules/05-hooks-and-safety.md) | Create hooks, capture baselines and native backups | 10 min facilitated |
+| 5 | [06](modules/06-clone-upgrade-spec.md) | Start APP01 and DATA01 clone-upgrades in separate terminals | 5 min start + background wait |
+| 6 | [09](modules/09-mcp-integration.md) | Add and use AWS Knowledge MCP while upgrades run | 20 min |
+| 7 | [10](modules/10-skills-and-reuse.md) | Create a reusable skill and fleet plan while upgrades run | 20 min |
+| 8 | [10B](modules/10b-agents-and-subagents.md) | Create specialized agents, models, and subagents while upgrades run | 25 min |
+| 9 | [07](modules/07-validation-spec.md) | Launch Windows Server 2025 copies and run post-upgrade tests | 20 min |
+| 10 | [08](modules/08-cutover-rollback-spec.md) | APP01 cutover/rollback simulation; DATA01 compatibility boundary | 15 min |
+| 11 | [11](modules/11-cleanup.md) | Remove all billable resources | 10 min |
+
+### Facilitated schedule
+
+| Time | Activity |
+|---|---|
+| 14:30–14:50 | Module 02 — create steering, agent, and permissions |
+| 14:50–15:05 | Module 03 — inventory with Spec mode |
+| 15:05–15:15 | Module 04 — compatibility assessment |
+| 15:15–15:25 | Module 05 — hooks, baseline tests, and database backups |
+| 15:25–15:30 | Module 06 — start APP01 and DATA01 upgrades in separate terminals |
+| **15:30–16:00** | **Break — both upgrades continue running** |
+| 16:00–16:20 | Module 09 — add AWS Knowledge MCP |
+| 16:20–16:40 | Module 10 — create and exercise a skill |
+| 16:40–17:05 | Module 10B — models, specialized agents, and subagents |
+| 17:05–17:25 | Inspect upgrade progress; complete advanced exercise/Q&A if still running |
+| 17:25–17:45 | Module 07 — validation and comparison (after both upgrades succeed) |
+| 17:45–18:00 | Module 08 — APP01 cutover and rollback simulation |
+| 18:00–18:10 | Module 11 — cleanup and wrap-up |
+
+Upgrade duration is controlled by AWS Systems Manager and Windows Update and can vary. Do not skip success checks merely to keep the agenda. The facilitator should allow schedule buffer or prepare a documented fallback environment if either runbook is still running at 17:25.
 
 ## Quick start
 
