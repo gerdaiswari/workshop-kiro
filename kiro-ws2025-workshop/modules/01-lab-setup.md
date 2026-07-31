@@ -6,7 +6,7 @@
 ```bash
 ./scripts/00_deploy.sh \
   --region us-east-1 \
-  --profile default \
+  \
   --stack-name kiro-ws2025-lab
 ```
 
@@ -14,7 +14,6 @@
 ```powershell
 .\scripts\00_deploy.ps1 `
   -Region us-east-1 `
-  -Profile default `
   -StackName kiro-ws2025-lab
 ```
 
@@ -34,7 +33,7 @@ Bootstrap can take 30–90 minutes because DATA01 installs three database engine
 This one-line AWS CLI command works in PowerShell and Bash:
 
 ```text
-aws cloudformation describe-stacks --stack-name kiro-ws2025-lab --query "Stacks[0].Outputs" --region us-east-1 --profile default
+aws cloudformation describe-stacks --stack-name kiro-ws2025-lab --query "Stacks[0].Outputs" --region us-east-1
 ```
 
 Open `http://<LoadBalancerDns>/` and test:
@@ -52,35 +51,39 @@ Open `http://<LoadBalancerDns>/` and test:
 ## Verify SSM
 
 ```text
-aws ssm describe-instance-information --filters Key=tag:Project,Values=kiro-ws2025-workshop --region us-east-1 --profile default
+aws ssm describe-instance-information --filters Key=tag:Project,Values=kiro-ws2025-workshop --region us-east-1
 ```
 
 Both source instances must be `Online`. There is no RDP ingress; use Session Manager only if troubleshooting is required.
 
-## Understand the applications
+## Explore the applications with plain Kiro
 
-Start Kiro from the repository root.
+Start with Kiro's default Vibe mode from the repository root—do not select a custom agent yet:
 
-**Windows:** `kiro-cli chat --v3 --agent windows-upgrade-windows`
-
-**Linux/macOS:** `kiro-cli chat --v3 --agent windows-upgrade`
+```text
+kiro-cli chat --v3
+```
 
 Ask:
 
 ```text
-Inspect apps/, bootstrap/, and infra/lab.yaml. Explain how each workload is built, which Windows service owns it, which endpoint proves behavior, and which external downloads make bootstrap non-hermetic. Do not make changes.
+Inspect apps/, bootstrap/, and infra/lab.yaml. Explain how each workload is built,
+which Windows service owns it, which endpoint proves behavior, and which external
+downloads make bootstrap non-hermetic. Do not make changes.
 ```
 
-**Checkpoint:** stack complete, both instances SSM Online, and all seven URL routes respond.
+Notice what plain Kiro can already do: read the project, follow code relationships, and explain the architecture. In Module 02 you will create steering and your own focused agent so its behavior is repeatable and constrained.
+
+**Checkpoint:** stack complete, both instances SSM Online, all seven URL routes respond, and plain Kiro accurately identifies the APP01 and DATA01 components.
 
 ## If deployment rolls back
 
 Extract failed resources and list durable bootstrap logs. These one-line commands work in PowerShell and Bash:
 
 ```text
-aws cloudformation describe-stack-events --stack-name kiro-ws2025-lab --query "StackEvents[?contains(ResourceStatus, 'FAILED')].[Timestamp,LogicalResourceId,ResourceStatusReason]" --output table --region us-east-1 --profile default
+aws cloudformation describe-stack-events --stack-name kiro-ws2025-lab --query "StackEvents[?contains(ResourceStatus, 'FAILED')].[Timestamp,LogicalResourceId,ResourceStatusReason]" --output table --region us-east-1
 
-aws s3 ls s3://<artifact-bucket>/logs/kiro-ws2025-lab/ --recursive --region us-east-1 --profile default
+aws s3 ls s3://<artifact-bucket>/logs/kiro-ws2025-lab/ --recursive --region us-east-1
 ```
 
 A stack in `ROLLBACK_COMPLETE` cannot be updated. After reviewing the resource IDs, delete only the failed stack metadata/resources and wait before retrying:
@@ -88,17 +91,17 @@ A stack in `ROLLBACK_COMPLETE` cannot be updated. After reviewing the resource I
 **Linux / macOS:**
 ```bash
 aws cloudformation delete-stack --stack-name kiro-ws2025-lab \
-  --region us-east-1 --profile default
+  --region us-east-1
 aws cloudformation wait stack-delete-complete --stack-name kiro-ws2025-lab \
-  --region us-east-1 --profile default
+  --region us-east-1
 ```
 
 **Windows (PowerShell):**
 ```powershell
 aws cloudformation delete-stack --stack-name kiro-ws2025-lab `
-  --region us-east-1 --profile default
+  --region us-east-1
 aws cloudformation wait stack-delete-complete --stack-name kiro-ws2025-lab `
-  --region us-east-1 --profile default
+  --region us-east-1
 ```
 
 The artifact bucket is intentionally outside the stack, so payloads and bootstrap diagnostics survive rollback.

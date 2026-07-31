@@ -5,11 +5,11 @@ Review the high-impact change in Kiro Spec mode, then start the AWS-owned clone-
 
 ## 1. Review the change in Spec mode
 
-Start Spec mode with the main agent for your workstation.
+Start Spec mode with the agent you created:
 
-**Windows:** `kiro-cli chat --v3 --mode spec --agent windows-upgrade-windows`
-
-**Linux/macOS:** `kiro-cli chat --v3 --mode spec --agent windows-upgrade`
+```text
+kiro-cli chat --v3 --mode spec --agent my-windows-upgrade
+```
 
 At the Kiro prompt:
 
@@ -30,7 +30,7 @@ Do not run upgrade tasks unattended or with `--trust-all-tools`. The determinist
 ```powershell
 py -3 scripts\04_start_upgrade.py `
   --server APP01 `
-  --region us-east-1 --profile default `
+  --region us-east-1 `
   --stack-name kiro-ws2025-lab
 ```
 
@@ -39,7 +39,7 @@ py -3 scripts\04_start_upgrade.py `
 ```bash
 python3 scripts/04_start_upgrade.py \
   --server APP01 \
-  --region us-east-1 --profile default \
+  --region us-east-1 \
   --stack-name kiro-ws2025-lab
 ```
 
@@ -65,7 +65,7 @@ Continue only after APP01 completes and DATA01 native backup evidence passes.
 ```powershell
 py -3 scripts\04_start_upgrade.py `
   --server DATA01 `
-  --region us-east-1 --profile default `
+  --region us-east-1 `
   --stack-name kiro-ws2025-lab
 ```
 
@@ -74,7 +74,7 @@ py -3 scripts\04_start_upgrade.py `
 ```bash
 python3 scripts/04_start_upgrade.py \
   --server DATA01 \
-  --region us-east-1 --profile default \
+  --region us-east-1 \
   --stack-name kiro-ws2025-lab
 ```
 
@@ -83,13 +83,13 @@ python3 scripts/04_start_upgrade.py \
 The AWS CLI command is identical on all platforms when written on one line:
 
 ```text
-aws ssm get-automation-execution --automation-execution-id <execution-id> --region us-east-1 --profile default
+aws ssm get-automation-execution --automation-execution-id <execution-id> --region us-east-1
 ```
 
-A failure is evidence, not permission to modify the source blindly. Start a normal Kiro session with the agent for your workstation and ask it to analyze the failed step, logs, prerequisites, and remediation options without taking action.
+A failure is evidence, not permission to modify the source blindly. Start a normal session with your agent and ask it to analyze the failed step, logs, prerequisites, and remediation options without taking action:
 
-**Windows:** `kiro-cli chat --v3 --agent windows-upgrade-windows`
-
-**Linux/macOS:** `kiro-cli chat --v3 --agent windows-upgrade`
+```text
+kiro-cli chat --v3 --agent my-windows-upgrade
+```
 
 **Checkpoint:** successful execution evidence contains an upgraded AMI ID for each server, and both source instances remain healthy on Windows Server 2019.

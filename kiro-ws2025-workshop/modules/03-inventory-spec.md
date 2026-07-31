@@ -5,13 +5,13 @@ Use the v3 Spec chat mode to review requirements, design, and tasks before colle
 
 ## 1. Start Kiro in Spec mode
 
-Use the command for your workstation from the repository root:
+Use the agent you created in Module 02:
 
-**Windows:** `kiro-cli chat --v3 --mode spec --agent windows-upgrade-windows`
+```text
+kiro-cli chat --v3 --mode spec --agent my-windows-upgrade
+```
 
-**Linux/macOS:** `kiro-cli chat --v3 --mode spec --agent windows-upgrade`
-
-These commands select the v3 agent engine and start its `spec` mode. Spec mode is not a separate `kiro-cli spec` command.
+This selects the v3 engine, your custom agent, and structured Spec mode.
 
 ## 2. Review the instructor-approved Spec
 
@@ -52,7 +52,7 @@ Exit Kiro, then run the deterministic inventory script.
 
 ```powershell
 py -3 scripts\01_collect_inventory.py `
-  --region us-east-1 --profile default `
+  --region us-east-1 `
   --stack-name kiro-ws2025-lab
 ```
 
@@ -60,7 +60,7 @@ py -3 scripts\01_collect_inventory.py `
 
 ```bash
 python3 scripts/01_collect_inventory.py \
-  --region us-east-1 --profile default \
+  --region us-east-1 \
   --stack-name kiro-ws2025-lab
 ```
 
@@ -79,11 +79,11 @@ Get-Content results\inventory\inventory.json -Raw |
 python3 -m json.tool results/inventory/inventory.json | less
 ```
 
-Start the normal workshop agent again.
+Start your normal custom agent again:
 
-**Windows:** `kiro-cli chat --v3 --agent windows-upgrade-windows`
-
-**Linux/macOS:** `kiro-cli chat --v3 --agent windows-upgrade`
+```text
+kiro-cli chat --v3 --agent my-windows-upgrade
+```
 
 Ask:
 

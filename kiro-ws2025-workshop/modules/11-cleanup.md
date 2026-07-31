@@ -11,7 +11,6 @@ The plan lists validation instances, retained AMIs and snapshots, the CloudForma
 ```powershell
 .\scripts\08_cleanup.ps1 -Plan `
   -Region us-east-1 `
-  -Profile default `
   -StackName kiro-ws2025-lab
 ```
 
@@ -19,7 +18,7 @@ The plan lists validation instances, retained AMIs and snapshots, the CloudForma
 
 ```bash
 ./scripts/08_cleanup.sh --plan \
-  --region us-east-1 --profile default \
+  --region us-east-1 \
   --stack-name kiro-ws2025-lab
 ```
 
@@ -32,7 +31,6 @@ Review every resource ID in the output. Stop if it does not match this workshop.
 ```powershell
 .\scripts\08_cleanup.ps1 -Execute `
   -Region us-east-1 `
-  -Profile default `
   -StackName kiro-ws2025-lab
 ```
 
@@ -40,7 +38,7 @@ Review every resource ID in the output. Stop if it does not match this workshop.
 
 ```bash
 ./scripts/08_cleanup.sh --execute \
-  --region us-east-1 --profile default \
+  --region us-east-1 \
   --stack-name kiro-ws2025-lab
 ```
 
@@ -53,7 +51,7 @@ Do not add `-Yes` on Windows or `--yes` on Linux/macOS during the guided worksho
 This one-line AWS CLI command works on every workstation:
 
 ```text
-aws cloudformation describe-stacks --stack-name kiro-ws2025-lab --region us-east-1 --profile default
+aws cloudformation describe-stacks --stack-name kiro-ws2025-lab --region us-east-1
 ```
 
 A `ValidationError` stating that the stack does not exist is expected. Also inspect owned AMIs and snapshots carrying the project tag so no retained charges remain.

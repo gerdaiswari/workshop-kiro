@@ -30,7 +30,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", required=True, choices=("APP01", "DATA01"))
     parser.add_argument("--region", required=True)
-    parser.add_argument("--profile", default="default")
+    parser.add_argument("--profile")
     parser.add_argument("--stack-name", default="kiro-ws2025-lab")
     parser.add_argument("--yes", action="store_true")
     parser.add_argument("--poll-seconds", type=int, default=30)

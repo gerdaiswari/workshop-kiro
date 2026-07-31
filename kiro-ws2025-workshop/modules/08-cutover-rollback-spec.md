@@ -10,14 +10,14 @@ APP01 contains synthetic stateless applications. DATA01 continues accepting writ
 
 ```powershell
 py -3 scripts\07_app_cutover.py --action plan `
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
 **Linux/macOS Bash:**
 
 ```bash
 python3 scripts/07_app_cutover.py --action plan \
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
 The plan shows source and validation instances, both target groups, health, proposed operations, and rollback.
@@ -28,14 +28,14 @@ The plan shows source and validation instances, both target groups, health, prop
 
 ```powershell
 py -3 scripts\07_app_cutover.py --action cutover `
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
 **Linux/macOS Bash:**
 
 ```bash
 python3 scripts/07_app_cutover.py --action cutover \
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
 The script registers VAL-APP01, waits for healthy IIS and nginx target groups, probes ALB routes, and only then deregisters source APP01.
@@ -46,14 +46,14 @@ The script registers VAL-APP01, waits for healthy IIS and nginx target groups, p
 
 ```powershell
 py -3 scripts\07_app_cutover.py --action rollback `
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
 **Linux/macOS Bash:**
 
 ```bash
 python3 scripts/07_app_cutover.py --action rollback \
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
 Measure and record recovery time. Target registration and application warm-up mean rollback is not literally instantaneous.
@@ -61,7 +61,7 @@ Measure and record recovery time. Target registration and application warm-up me
 ## 4. Discuss production patterns with Kiro
 
 ```text
-kiro-cli chat --v3 --agent upgrade-planner
+kiro-cli chat --v3 --agent my-windows-upgrade
 ```
 
 Ask it to compare:

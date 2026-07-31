@@ -11,7 +11,7 @@ param(
     [Parameter(Mandatory, ParameterSetName = 'Plan')][switch]$Plan,
     [Parameter(Mandatory, ParameterSetName = 'Execute')][switch]$Execute,
     [Parameter(Mandatory)][string]$Region,
-    [string]$Profile = 'default',
+    [string]$Profile,
     [string]$StackName = 'kiro-ws2025-lab',
     [Parameter(ParameterSetName = 'Execute')][switch]$Yes
 )
@@ -32,9 +32,9 @@ $modeArgument = if ($Execute) { '--execute' } else { '--plan' }
 $cleanupArguments = @(
     $modeArgument,
     '--region', $Region,
-    '--profile', $Profile,
     '--stack-name', $StackName
 )
+if ($Profile) { $cleanupArguments += @('--profile', $Profile) }
 if ($Yes) { $cleanupArguments += '--yes' }
 
 & $PythonExe @PythonPrefix "$Root\scripts\cleanup.py" @cleanupArguments

@@ -23,48 +23,44 @@ python3 scripts/02_analyze_compatibility.py \
 
 Read `results/compatibility/report.md` and `results/compatibility/report.json`.
 
-## 2. Use Kiro for reasoning, not rule substitution
+## 2. Use your agent for reasoning, not rule substitution
 
-Start the workshop agent.
+Start the agent you created in Module 02:
 
-**Windows:** `kiro-cli chat --v3 --agent windows-upgrade-windows`
-
-**Linux/macOS:** `kiro-cli chat --v3 --agent windows-upgrade`
+```text
+kiro-cli chat --v3 --agent my-windows-upgrade
+```
 
 Ask:
 
 ```text
-Activate the windows-upgrade skill. Review the compatibility report.
-Separate AWS runbook eligibility, operating-system compatibility, vendor
-support unknowns, application test coverage, and production cutover readiness.
-Cite evidence paths. Do not modify files and do not call AWS account APIs.
+Review the compatibility report. Separate AWS runbook eligibility,
+operating-system compatibility, vendor-support unknowns, application test
+coverage, and production cutover readiness. Cite evidence paths. Treat any
+current-documentation fact we have not verified as unknown. Do not modify files
+and do not call AWS account APIs.
 ```
 
-Then ask it to use the configured AWS Knowledge MCP server:
-
-```text
-Using AWS Knowledge MCP, verify the currently documented supported path and
-prerequisites for AWSEC2-CloneInstanceAndUpgradeWindows from Windows Server
-2019 to 2025. Compare them with our report and identify drift. Do not call AWS
-account APIs and do not edit files.
-```
+The deterministic analyzer remains the source of pass/warning/blocker results. Your agent adds structured reasoning but must not invent current AWS or vendor facts. Module 09 will add AWS Knowledge MCP for documentation checks.
 
 The analyzer should classify DATA01 as eligible for clone compatibility testing but not for AMI-only production cutover.
 
-## 3. Run an independent review
+## 3. Request a fresh read-only challenge
 
-Exit the first chat and start the read-only reviewer:
+Exit the custom agent and start a new plain session:
 
 ```text
-kiro-cli chat --v3 --agent upgrade-reviewer
+kiro-cli chat --v3
 ```
 
 Ask:
 
 ```text
-Challenge results/compatibility/report.md for false passes, unknown vendor
-support, database consistency risks, and missing rollback evidence.
-Return findings only; do not edit files or call AWS.
+Act as a read-only challenger. Review results/compatibility/report.md for false
+passes, unknown vendor support, database consistency risks, and missing rollback
+evidence. Return findings only; do not edit files or call AWS.
 ```
+
+This is a simple second pass, not a fully isolated specialist. In Module 10B you will create a dedicated reviewer agent with its own model and restricted tools.
 
 **Checkpoint:** no unresolved AWS prerequisite blocker exists, every workload has a test oracle, and stateful cutover remains blocked by design.

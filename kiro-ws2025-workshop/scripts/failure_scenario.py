@@ -10,7 +10,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--action", required=True, choices=("inject", "repair"))
     parser.add_argument("--region", required=True)
-    parser.add_argument("--profile", default="default")
+    parser.add_argument("--profile")
     parser.add_argument("--yes", action="store_true")
     args = parser.parse_args()
     aws = AwsContext(args.region, args.profile)

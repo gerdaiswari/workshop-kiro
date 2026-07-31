@@ -23,10 +23,13 @@ class AwsCliError(RuntimeError):
 @dataclass(frozen=True)
 class AwsContext:
     region: str
-    profile: str
+    profile: str | None = None
 
     def command(self, service_and_args: list[str]) -> list[str]:
-        return ["aws", *service_and_args, "--region", self.region, "--profile", self.profile]
+        command = ["aws", *service_and_args, "--region", self.region]
+        if self.profile:
+            command.extend(["--profile", self.profile])
+        return command
 
     def call(self, service_and_args: list[str], *, expect_json: bool = True) -> Any:
         command = self.command(service_and_args)

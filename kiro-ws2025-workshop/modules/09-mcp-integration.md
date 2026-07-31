@@ -1,11 +1,28 @@
-# Module 09 – AWS Knowledge MCP integration
+# Module 09 – Add AWS Knowledge MCP to your agent
 
 ## Learning objective
-Verify that the workshop custom agent loads the read-only AWS Knowledge MCP server, then use it to check current AWS documentation without calling account APIs.
 
-## 1. Understand the configuration
+Configure an MCP server yourself, expose its tools to the agent you created, verify discovery, and use it for current AWS documentation without calling your AWS account APIs.
 
-Both workstation-specific main agents, plus the planner and reviewer agents, contain this agent-scoped configuration:
+## 1. Understand why MCP is needed
+
+A language model may have stale AWS product knowledge. The read-only AWS Knowledge MCP server lets Kiro retrieve current AWS documentation and source links.
+
+In this workshop MCP is used for documentation only. It does not authenticate to your AWS account, inspect your instances, or perform upgrades.
+
+## 2. Add the MCP server to your agent
+
+Start plain Kiro:
+
+```text
+kiro-cli chat --v3
+```
+
+Ask Kiro to update `.kiro/agents/my-windows-upgrade.json` with these three changes:
+
+1. Add `"@aws-knowledge-mcp-server/*"` to `tools`.
+2. Add `"@aws-knowledge-mcp-server/*"` to `allowedTools` because this server is read-only documentation access.
+3. Add this top-level object:
 
 ```json
 "mcpServers": {
@@ -16,35 +33,53 @@ Both workstation-specific main agents, plus the planner and reviewer agents, con
 }
 ```
 
-The same agents include AWS Knowledge tools in `tools` and `allowedTools`. The server provides documentation access; it does not use your AWS account credentials or replace application testing.
+Review the URL and tool name before approving the edit. MCP servers are code/data trust boundaries; do not add an unknown server merely because a prompt suggests it.
 
-## 2. Verify Kiro discovers the server
+## 3. Validate the updated agent
 
-Run from the repository root.
+Exit Kiro, then run the command for your workstation.
 
 **Windows PowerShell:**
 
 ```powershell
-kiro-cli agent validate --path .kiro\agents\windows-upgrade-windows.json
-kiro-cli mcp list workspace
+kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.json
 ```
 
 **Linux/macOS Bash:**
 
 ```bash
-kiro-cli agent validate --path .kiro/agents/windows-upgrade.json
+kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.json
+```
+
+A schema-valid agent does not prove the network endpoint is reachable; discovery is the next check.
+
+## 4. Verify MCP discovery
+
+```text
 kiro-cli mcp list workspace
 ```
 
-The workspace listing should show `aws-knowledge-mcp-server` under both main agents (`windows-upgrade` and `windows-upgrade-windows`), `upgrade-planner`, and `upgrade-reviewer`.
+Expected section:
 
-## 3. Verify the tools inside chat
+```text
+my-windows-upgrade
+  • aws-knowledge-mcp-server
+```
 
-Start the main agent for your workstation.
+If it is missing, confirm that:
 
-**Windows:** `kiro-cli chat --v3 --agent windows-upgrade-windows`
+- Kiro was started from the repository root.
+- The `mcpServers` object is top-level in the agent JSON.
+- The server name exactly matches the tool prefix.
+- Your proxy/firewall permits HTTPS access to `knowledge-mcp.global.api.aws`.
 
-**Linux/macOS:** `kiro-cli chat --v3 --agent windows-upgrade`
+## 5. Verify MCP tools in chat
+
+Start the agent you created:
+
+```text
+kiro-cli chat --v3 --agent my-windows-upgrade
+```
 
 Inside chat:
 
@@ -52,26 +87,42 @@ Inside chat:
 /tools
 ```
 
-Confirm that AWS Knowledge MCP tools are present. If the server cannot initialize, check network/proxy access and restart Kiro. Do not continue this module by inventing current AWS facts.
+Confirm that AWS Knowledge tools appear alongside the local tools you added earlier.
 
-## 4. Ask documentation questions
+## 6. Use MCP for an upgrade documentation check
 
-```text
-Using AWS Knowledge MCP only, find the current documentation for
-AWSEC2-CloneInstanceAndUpgradeWindows. Return supported Windows Server 2019
-upgrade targets, prerequisites, exclusions, exact parameters, and source links.
-Compare with .kiro/steering/aws-conventions.md and flag drift.
-```
-
-Then:
+Ask:
 
 ```text
-Using AWS Knowledge MCP, review infra/lab.yaml for current CloudFormation and
-EC2 Windows best practices. Do not call account APIs and do not edit files.
+Using AWS Knowledge MCP only, find the current AWS documentation for
+AWSEC2-CloneInstanceAndUpgradeWindows. Return supported source and target
+operating systems, prerequisites, exclusions, exact parameters, and source links.
+Do not call account APIs and do not edit files.
 ```
 
-## Why account mutation is not enabled
+Then ask:
 
-Enabling authenticated AWS operation tools changes the trust boundary and requires IAM design. This workshop keeps AWS mutations in explicit Python/AWS CLI workflows with confirmations and saved evidence. Documentation retrieval improves currency; it does not replace deterministic compatibility tests or application-owner acceptance.
+```text
+Using AWS Knowledge MCP, review infra/lab.yaml against current EC2 Windows,
+CloudFormation, Systems Manager, and IMDS security guidance. Separate documented
+requirements from recommendations and include source links. Do not edit files.
+```
 
-**Checkpoint:** `kiro-cli mcp list workspace` shows the agent-scoped server, `/tools` shows AWS Knowledge tools, and Kiro answers with current AWS source links without invoking account APIs.
+MCP improves documentation currency; it does not prove application compatibility or replace deterministic tests.
+
+## 7. Compare with the reference configuration
+
+After your MCP exercise works, compare your agent with:
+
+- `.kiro/agents/windows-upgrade.json`
+- `.kiro/agents/windows-upgrade-windows.json`
+- `.kiro/agents/upgrade-planner.json`
+- `.kiro/agents/upgrade-reviewer.json`
+
+Notice which agents receive documentation access and why the execution-focused agent does not need it.
+
+## Why authenticated mutation MCP is not enabled
+
+An MCP server that operates on your AWS account would change the trust boundary and require separate IAM, approval, logging, and server-supply-chain review. This workshop keeps AWS mutations in explicit Python/AWS CLI workflows with confirmations and saved evidence.
+
+**Checkpoint:** you added `mcpServers` and the MCP tool prefix to your own agent, validation passed, `kiro-cli mcp list workspace` discovered the server, `/tools` showed it, and your response included current AWS source links without account API calls.

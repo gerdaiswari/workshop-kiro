@@ -1,156 +1,226 @@
-# Module 10B – Custom agents, subagents, and model selection
+# Module 10B – Create specialized agents, choose models, and use subagents
 
 ## Learning objective
-Use verified Kiro CLI commands to select specialized agents and models, and understand when a lower-cost model or lower reasoning effort is appropriate.
 
-## 1. Check the models available to your account
+Create your own reviewer and executor agents, assign models that are actually available to your account, validate their schemas, and let your main agent delegate a read-only review through subagents.
 
-Model availability can change and can differ by account. Never copy a model ID without checking it first.
+## 1. Discover models before configuring them
+
+Model availability and credit multipliers can change by account. List the models available now:
 
 ```text
 kiro-cli chat --list-models
 ```
 
-For machine-readable output:
+Machine-readable output:
 
 ```text
 kiro-cli chat --list-models --format json-pretty
 ```
 
-The workshop preflight verifies that every model configured in `.kiro/agents/` appears in this list:
+Choose:
 
-**Windows:**
+- One higher-capability model for architecture and independent review.
+- One lower-cost model for deterministic, routine inspection.
 
-```powershell
-py -3 scripts\check_kiro_prereqs.py
-```
+At the time this repository was validated, `claude-sonnet-5` and `claude-haiku-4.5` were available. Use them only if they appear in your own output.
 
-**Linux/macOS:**
+## 2. Create a read-only reviewer agent
 
-```bash
-python3 scripts/check_kiro_prereqs.py
-```
-
-At the time this repository was validated, the workshop agents used:
-
-| Agent | Configured model | Purpose |
-|---|---|---|
-| `windows-upgrade` | Account default | General workshop work on Linux/macOS |
-| `windows-upgrade-windows` | Account default | General workshop work on Windows |
-| `upgrade-planner` | `claude-sonnet-5` | Planning and risk analysis |
-| `upgrade-executor` | `claude-haiku-4.5` | Routine scripted work |
-| `upgrade-reviewer` | `claude-sonnet-5` | Independent evidence review |
-
-If the preflight reports an unavailable model, choose an ID shown by `--list-models`, update the relevant agent JSON, and validate again. Kiro's agent configuration documentation states that an unavailable agent model falls back to the default, but the workshop preflight treats that as an error so the change is visible.
-
-## 2. Validate and list the custom agents
+Start plain Kiro:
 
 ```text
-kiro-cli agent validate --path .kiro/agents/upgrade-planner.json
-kiro-cli agent validate --path .kiro/agents/upgrade-executor.json
-kiro-cli agent validate --path .kiro/agents/upgrade-reviewer.json
+kiro-cli chat --v3
+```
+
+Ask it to create `.kiro/agents/participant-reviewer.json` with the following configuration. Replace `AVAILABLE_REVIEW_MODEL` with the exact higher-capability model ID you selected before approving the write.
+
+```json
+{
+  "name": "participant-reviewer",
+  "description": "Participant-created independent reviewer for Windows upgrade evidence.",
+  "model": "AVAILABLE_REVIEW_MODEL",
+  "prompt": "Act as an independent reviewer. Inspect existing evidence, identify blockers and unsupported assumptions, and never repair or mutate the system you are reviewing.",
+  "tools": [
+    "read",
+    "grep",
+    "glob",
+    "code",
+    "@aws-knowledge-mcp-server/*"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob",
+    "code",
+    "@aws-knowledge-mcp-server/*"
+  ],
+  "mcpServers": {
+    "aws-knowledge-mcp-server": {
+      "url": "https://knowledge-mcp.global.api.aws",
+      "timeout": 120000
+    }
+  },
+  "resources": [
+    "file://README.md",
+    "file://.kiro/steering/**/*.md",
+    "skill://.kiro/skills/**/SKILL.md"
+  ]
+}
+```
+
+The reviewer intentionally has no `write`, `shell`, or authenticated AWS operation tool.
+
+## 3. Create a routine executor agent
+
+Ask plain Kiro to create `.kiro/agents/participant-executor.json`. Replace `AVAILABLE_EXECUTION_MODEL` with the exact lower-cost model ID you selected.
+
+```json
+{
+  "name": "participant-executor",
+  "description": "Participant-created agent for routine local validation tasks.",
+  "model": "AVAILABLE_EXECUTION_MODEL",
+  "prompt": "Run one deterministic, approved local task at a time. Show the command, capture the result, and escalate architecture or risk decisions to a reviewer.",
+  "tools": [
+    "read",
+    "grep",
+    "glob",
+    "shell"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob"
+  ],
+  "toolsSettings": {
+    "shell": {
+      "allowedCommands": [
+        "python3 tests/static/validate_repo.py*",
+        "py -3 tests/static/validate_repo.py*",
+        "git status*",
+        "git diff*"
+      ],
+      "deniedCommands": [
+        "aws *",
+        "rm -rf *",
+        "Remove-Item * -Recurse*"
+      ],
+      "autoAllowReadonly": true,
+      "denyByDefault": true
+    }
+  },
+  "resources": [
+    "file://README.md",
+    "file://.kiro/steering/**/*.md"
+  ]
+}
+```
+
+This executor can run only the listed local checks. It cannot call AWS.
+
+## 4. Validate the agents you created
+
+**Windows PowerShell:**
+
+```powershell
+kiro-cli agent validate --path .kiro\agents\participant-reviewer.json
+kiro-cli agent validate --path .kiro\agents\participant-executor.json
 kiro-cli agent list
 ```
 
-Run these commands from the repository root. Workspace agents are discovered from `.kiro/agents/`.
+**Linux/macOS Bash:**
 
-## 3. Use the planner for complex reasoning
+```bash
+kiro-cli agent validate --path .kiro/agents/participant-reviewer.json
+kiro-cli agent validate --path .kiro/agents/participant-executor.json
+kiro-cli agent list
+```
+
+If validation reports an unavailable model, return to `--list-models`, use an exact ID, and validate again.
+
+## 5. Use each specialized agent directly
+
+Start the reviewer:
 
 ```text
-kiro-cli chat --v3 --agent upgrade-planner
+kiro-cli chat --v3 --agent participant-reviewer
 ```
 
 Ask:
 
 ```text
-Given the APP01 and DATA01 inventory, design a wave-based upgrade strategy
-for 40 similar servers. Include risk tiers, gate criteria, rollback boundaries,
-and the evidence required before each wave. Do not modify files or call AWS.
+Review existing baseline, backup, compatibility, and post-upgrade evidence.
+Report blockers, warnings, missing tests, and unsupported assumptions.
+Do not edit files and do not call AWS account APIs.
 ```
 
-The planner has read-only tools and a stronger configured model.
-
-## 4. Use the executor for routine work
+Then start the executor:
 
 ```text
-kiro-cli chat --v3 --agent upgrade-executor
-```
-
-Ask it to run one deterministic task at a time, for example:
-
-```text
-Run the repository's read-only inventory collection script for us-east-1
-and summarize the saved result. Show the command before executing it.
-```
-
-The executor has restricted write paths and shell commands. Its model is chosen for lower-cost routine work, not for architecture approval.
-
-For a one-off simple request, Kiro also supports a lower reasoning-effort option:
-
-```text
-kiro-cli chat --v3 --effort low --agent upgrade-executor
-```
-
-## 5. Use the reviewer independently
-
-```text
-kiro-cli chat --v3 --agent upgrade-reviewer
+kiro-cli chat --v3 --agent participant-executor
 ```
 
 Ask:
 
 ```text
-Review the evidence under results/ and the compatibility report.
-Report blockers, warnings, untested services, and unsupported assumptions.
-Do not edit files and do not call AWS.
+Run the repository quick validator and summarize only its deterministic output.
+Show the command before running it.
 ```
 
-The reviewer is intentionally read-only. It should identify gaps rather than silently repair them.
+Notice that tool boundaries—not only the prompt—separate their responsibilities.
 
-## 6. Enable and exercise subagents
+## 6. Enable subagents on your main agent
 
-Kiro CLI exposes a documented subagent setting. Enable it once:
+Enable Kiro's documented subagent setting:
 
 ```text
 kiro-cli settings chat.enableSubagent true
 ```
 
-Restart the chat after changing settings, then start the main agent for your workstation.
+Use plain Kiro to add `"subagent"` to the `tools` array in `.kiro/agents/my-windows-upgrade.json`. Do not add it to `allowedTools`; review delegation requests before approval.
 
-**Windows:** `kiro-cli chat --v3 --agent windows-upgrade-windows`
+Validate `my-windows-upgrade.json` again, then restart it:
 
-**Linux/macOS:** `kiro-cli chat --v3 --agent windows-upgrade`
+```text
+kiro-cli chat --v3 --agent my-windows-upgrade
+```
 
 Ask:
 
 ```text
-Use subagents to create a three-stage, read-only review:
-1. The planner proposes post-upgrade test coverage.
-2. The executor inspects existing test result files only; do not run mutations.
-3. The reviewer identifies evidence gaps.
-Return one combined report and make no AWS changes.
+Use participant-executor and participant-reviewer as subagents for a read-only
+review. The executor may run only the quick local validator. The reviewer must
+independently inspect the resulting evidence and identify gaps. Return one
+combined report. Do not call AWS and do not modify files.
 ```
 
-The calling agent must include `subagent` in its `tools` list; both workstation-specific main agent files do.
+Subagents improve separation of duties but do not remove human approval or IAM boundaries.
 
-## 7. Understand the configuration fields
+## 7. Compare with the supplied multi-agent design
 
-| Field | Meaning |
+After your pipeline works, compare it with:
+
+- `.kiro/agents/upgrade-planner.json`
+- `.kiro/agents/upgrade-executor.json`
+- `.kiro/agents/upgrade-reviewer.json`
+- `.kiro/agents/windows-upgrade.json`
+- `.kiro/agents/windows-upgrade-windows.json`
+
+Look for differences in models, tools, MCP access, shell boundaries, resources, and role prompts. The supplied agents are reference implementations you can now evaluate rather than unexplained files.
+
+## 8. Understand the controls
+
+| Field or setting | Function |
 |---|---|
-| `model` | Model ID from `kiro-cli chat --list-models` |
-| `tools` | Tools the agent may request |
-| `allowedTools` | Tools automatically approved without prompting |
-| `toolsSettings` | Restrictions for paths, commands, and services |
-| `resources` | Files and skills loaded into context |
-| `hooks` | Commands run at documented agent/tool lifecycle triggers |
-| `prompt` | Role, behavior, and safety instructions |
+| `model` | Exact model ID discovered with `--list-models` |
+| `prompt` | Specialized responsibility and behavior |
+| `tools` | Capabilities the agent may request |
+| `allowedTools` | Capabilities trusted without prompting |
+| `toolsSettings` | Command, path, or AWS-service restrictions |
+| `resources` | Steering and skills loaded into context |
+| `mcpServers` | External MCP connections owned by the agent |
+| `chat.enableSubagent` | Enables delegation through the subagent tool |
 
-## Important limitations
+A lower-cost model can reduce usage cost but may produce different quality. Use deterministic scripts for execution and stronger independent review for risk decisions.
 
-- Model availability and credit multipliers can change; always run `--list-models` and the preflight.
-- A cheaper model can reduce usage cost, but it may produce different quality. Always review evidence and decisions.
-- `--trust-all-tools` bypasses approval prompts; do not use it for this workshop.
-- Custom-agent restrictions and hooks are defense in depth. IAM remains authoritative for AWS access.
-- Subagents do not remove the need for human review or mutation approval.
-
-**Checkpoint:** all custom agents validate, configured models pass the preflight, at least two agents have been used, and the participant can explain why routine execution and architecture decisions use different controls.
+**Checkpoint:** you selected currently available model IDs, created and validated two specialized agents, ran each directly, added the subagent tool to your main agent, and completed a read-only delegated review.

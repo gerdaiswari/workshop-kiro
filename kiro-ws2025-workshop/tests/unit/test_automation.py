@@ -54,6 +54,10 @@ class AwsHelperTests(unittest.TestCase):
         self.assertEqual(command[0], "aws")
         self.assertEqual(command[-4:], ["--region", "ap-southeast-1", "--profile", "lab"])
 
+    def test_context_omits_profile_for_environment_credentials(self):
+        command = AwsContext("us-east-1").command(["sts", "get-caller-identity"])
+        self.assertEqual(command, ["aws", "sts", "get-caller-identity", "--region", "us-east-1"])
+
 
 class UpgradeOutputTests(unittest.TestCase):
     @classmethod

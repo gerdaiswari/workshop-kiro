@@ -11,18 +11,18 @@ Each command requires approval, launches from a recorded upgraded AMI, enforces 
 
 ```powershell
 py -3 scripts\05_launch_validation.py --server APP01 `
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 py -3 scripts\05_launch_validation.py --server DATA01 `
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
 **Linux/macOS Bash:**
 
 ```bash
 python3 scripts/05_launch_validation.py --server APP01 \
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 python3 scripts/05_launch_validation.py --server DATA01 \
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
 ## 2. Run post-upgrade tests and compare
@@ -31,7 +31,7 @@ python3 scripts/05_launch_validation.py --server DATA01 \
 
 ```powershell
 py -3 scripts\03_run_tests.py --phase post `
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 py -3 scripts\06_compare_results.py
 ```
 
@@ -39,7 +39,7 @@ py -3 scripts\06_compare_results.py
 
 ```bash
 python3 scripts/03_run_tests.py --phase post \
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 python3 scripts/06_compare_results.py
 ```
 
@@ -53,29 +53,29 @@ The injection script first verifies that the target is tagged `Role=VAL-APP01`; 
 
 ```powershell
 py -3 scripts\failure_scenario.py --action inject `
-  --region us-east-1 --profile default
+  --region us-east-1
 py -3 scripts\03_run_tests.py --phase post `
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
 **Linux/macOS Bash:**
 
 ```bash
 python3 scripts/failure_scenario.py --action inject \
-  --region us-east-1 --profile default
+  --region us-east-1
 python3 scripts/03_run_tests.py --phase post \
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
 The Next.js checks should now fail.
 
 Start Kiro:
 
-Start the main agent for your workstation.
+Start the agent you created:
 
-**Windows:** `kiro-cli chat --v3 --agent windows-upgrade-windows`
-
-**Linux/macOS:** `kiro-cli chat --v3 --agent windows-upgrade`
+```text
+kiro-cli chat --v3 --agent my-windows-upgrade
+```
 
 Ask:
 
@@ -91,9 +91,9 @@ Do not change source APP01 and do not call AWS.
 
 ```powershell
 py -3 scripts\failure_scenario.py --action repair `
-  --region us-east-1 --profile default
+  --region us-east-1
 py -3 scripts\03_run_tests.py --phase post `
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 py -3 scripts\06_compare_results.py
 ```
 
@@ -101,9 +101,9 @@ py -3 scripts\06_compare_results.py
 
 ```bash
 python3 scripts/failure_scenario.py --action repair \
-  --region us-east-1 --profile default
+  --region us-east-1
 python3 scripts/03_run_tests.py --phase post \
-  --region us-east-1 --profile default --stack-name kiro-ws2025-lab
+  --region us-east-1 --stack-name kiro-ws2025-lab
 python3 scripts/06_compare_results.py
 ```
 

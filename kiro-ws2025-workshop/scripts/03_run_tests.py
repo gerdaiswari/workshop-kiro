@@ -12,7 +12,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--phase", required=True, choices=("baseline", "post", "backup-data"))
     parser.add_argument("--region", required=True)
-    parser.add_argument("--profile", default="default")
+    parser.add_argument("--profile")
     parser.add_argument("--stack-name", default="kiro-ws2025-lab")
     args = parser.parse_args()
     aws = AwsContext(args.region, args.profile)

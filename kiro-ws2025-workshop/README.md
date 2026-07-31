@@ -57,16 +57,16 @@ No RDP key pair is required.
 |---|---|---:|
 | [00](modules/00-prerequisites.md) | Prerequisites, cost, assumptions | 15 min |
 | [01](modules/01-lab-setup.md) | Deploy and verify WS2019 lab | 30 min + bootstrap |
-| [02](modules/02-steering-and-permissions.md) | Configure Kiro, steering, agent, and tool trust | 20 min |
+| [02](modules/02-steering-and-permissions.md) | Create steering, an agent, and tool permissions | 30 min |
 | [03](modules/03-inventory-spec.md) | Inventory through SSM and Kiro Spec | 25 min |
-| [04](modules/04-compatibility-spec.md) | Compatibility analysis and remediation plan | 25 min |
-| [05](modules/05-hooks-and-safety.md) | Hooks, approvals, baseline evidence | 20 min |
+| [04](modules/04-compatibility-spec.md) | Compatibility analysis and evidence challenge | 25 min |
+| [05](modules/05-hooks-and-safety.md) | Create hooks, test safety, capture baselines | 30 min |
 | [06](modules/06-clone-upgrade-spec.md) | Start and monitor clone upgrades | 30 min active + up to 4 hr wait |
 | [07](modules/07-validation-spec.md) | Launch WS2025 copies, test, inject and fix failure | 35 min |
 | [08](modules/08-cutover-rollback-spec.md) | APP01 cutover/rollback simulation; DATA01 caveat | 20 min |
-| [09](modules/09-mcp-integration.md) | AWS Knowledge MCP exercises | 15 min |
-| [10](modules/10-skills-and-reuse.md) | Reuse for a 40-server fleet | 15 min |
-| [10B](modules/10b-agents-and-subagents.md) | Custom agents, subagents, multi-model strategies | 25 min |
+| [09](modules/09-mcp-integration.md) | Add and use AWS Knowledge MCP | 20 min |
+| [10](modules/10-skills-and-reuse.md) | Create a reusable skill and fleet plan | 25 min |
+| [10B](modules/10b-agents-and-subagents.md) | Create specialized agents, models, and subagents | 35 min |
 | [11](modules/11-cleanup.md) | Remove all billable resources | 10 min |
 
 ## Quick start
@@ -75,23 +75,23 @@ No RDP key pair is required.
 ```bash
 cd kiro-ws2025-workshop
 python3 scripts/check_kiro_prereqs.py
-aws sts get-caller-identity --profile default --region us-east-1
+aws sts get-caller-identity
 python3 tests/static/validate_repo.py
-./scripts/00_deploy.sh --region us-east-1 --profile default
-kiro-cli chat --v3 --agent windows-upgrade
+./scripts/00_deploy.sh --region us-east-1
+kiro-cli chat --v3
 ```
 
 **Windows (PowerShell):**
 ```powershell
 cd kiro-ws2025-workshop
 py -3 scripts\check_kiro_prereqs.py
-aws sts get-caller-identity --profile default --region us-east-1
+aws sts get-caller-identity
 py -3 tests\static\validate_repo.py
-.\scripts\00_deploy.ps1 -Region us-east-1 -Profile default
-kiro-cli chat --v3 --agent windows-upgrade-windows
+.\scripts\00_deploy.ps1 -Region us-east-1
+kiro-cli chat --v3
 ```
 
-Then follow Module 02 onward. The deployment script prints stack outputs and writes non-secret state under `results/`.
+Then follow Module 01 to explore the project with plain Kiro. In Module 02, participants create steering and their own custom agent before using agent-based exercises.
 
 ## Expected URL routes
 

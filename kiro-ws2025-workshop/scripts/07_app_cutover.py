@@ -49,7 +49,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--action", required=True, choices=("plan", "cutover", "rollback"))
     parser.add_argument("--region", required=True)
-    parser.add_argument("--profile", default="default")
+    parser.add_argument("--profile")
     parser.add_argument("--stack-name", default="kiro-ws2025-lab")
     parser.add_argument("--yes", action="store_true")
     args = parser.parse_args()
@@ -65,13 +65,14 @@ def main() -> int:
         raise SystemExit("Post-upgrade comparison is not passing")
     target_groups = [outputs["AppIisTargetGroupArn"], outputs["AppNginxTargetGroupArn"]]
     before = {group: health(aws, group) for group in target_groups}
+    profile_option = f" --profile {args.profile}" if args.profile else ""
     plan = {
         "action": args.action, "source_instance_id": source, "validation_instance_id": validation,
         "target_groups": target_groups, "before": before,
         "sequence": ("register validation, wait healthy, deregister source" if args.action == "cutover" else "register source, wait healthy, deregister validation"),
         "rollback_commands": {
-            "windows": f"py -3 scripts\\07_app_cutover.py --action rollback --region {args.region} --profile {args.profile} --stack-name {args.stack_name}",
-            "linux_macos": f"python3 scripts/07_app_cutover.py --action rollback --region {args.region} --profile {args.profile} --stack-name {args.stack_name}",
+            "windows": f"py -3 scripts\\07_app_cutover.py --action rollback --region {args.region}{profile_option} --stack-name {args.stack_name}",
+            "linux_macos": f"python3 scripts/07_app_cutover.py --action rollback --region {args.region}{profile_option} --stack-name {args.stack_name}",
         },
     }
     print(json.dumps(plan, indent=2, default=str))

@@ -1,128 +1,214 @@
-# Module 02 – Configure Kiro steering, agent, and tool trust
+# Module 02 – Create steering, an agent, and tool permissions
 
 ## Learning objective
-Start a workspace custom agent, understand what context it inherits, and verify that read-only tools are trusted while mutations still require approval.
 
-## 1. Inspect the workspace configuration
+Create Kiro workspace steering and a custom agent yourself, then control which tools it can use, which tools are trusted, and where it may write. The finished agents supplied with the workshop are references—not a substitute for this exercise.
 
-Kiro discovers workspace configuration only when you start it from the repository directory.
+## 1. Start with plain Kiro
+
+From the repository root, start Vibe mode without `--agent`:
+
+```text
+kiro-cli chat --v3
+```
+
+Ask:
+
+```text
+What Kiro workspace configuration folders exist in this repository, and what is
+the purpose of steering, agents, skills, hooks, and MCP? Read only; do not edit.
+```
+
+This establishes the starting point: plain Kiro has general capabilities but no role tailored to your upgrade exercise.
+
+## 2. Create your own steering file
+
+Steering is persistent project context. Instead of only reading the supplied steering, create a participant-owned file.
+
+At the plain Kiro prompt, enter:
+
+```text
+Create .kiro/steering/participant-safety.md with these rules:
+- This is a Windows Server 2019 to 2025 clone-upgrade workshop in us-east-1.
+- Never upgrade a source instance in place.
+- Never delete AWS resources without explicit approval in the current turn.
+- Treat DATA01 as stateful; an AMI copy is not database synchronization.
+- Require baseline and post-upgrade evidence before recommending promotion.
+Show the proposed file and ask for approval before writing it.
+```
+
+Approve only after the content matches the five rules. Exit and restart Kiro so the new steering file is loaded, then ask:
+
+```text
+Summarize the upgrade safety rules that apply to this workspace.
+```
+
+**What you learned:** files under `.kiro/steering/` give every workspace session durable project context. Keep steering factual, concise, and applicable across tasks.
+
+## 3. Create a minimal read-only agent
+
+Start plain Kiro again if needed:
+
+```text
+kiro-cli chat --v3
+```
+
+Ask Kiro to create `.kiro/agents/my-windows-upgrade.json` with exactly this configuration:
+
+```json
+{
+  "name": "my-windows-upgrade",
+  "description": "Participant-created read-only Windows upgrade learning agent.",
+  "prompt": "You are a cautious Windows EC2 upgrade assistant. Use workspace steering, distinguish facts from assumptions, and never claim that an AMI clone synchronizes a live database.",
+  "tools": [
+    "read",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "resources": [
+    "file://README.md",
+    "file://.kiro/steering/**/*.md"
+  ],
+  "welcomeMessage": "My Windows upgrade learning agent is ready in read-only mode."
+}
+```
+
+The important fields are:
+
+| Field | Function |
+|---|---|
+| `name` | Name used with `--agent` |
+| `description` | Helps people understand when to use the agent |
+| `prompt` | Defines its role and behavior |
+| `tools` | Tools the agent is able to request |
+| `allowedTools` | Tools trusted to run without an approval prompt |
+| `resources` | Workspace files loaded as agent context |
+
+Exit Kiro and validate the file.
 
 **Windows PowerShell:**
 
 ```powershell
-Get-ChildItem .kiro\steering, .kiro\skills, .kiro\agents -Recurse -File
+kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.json
 ```
 
 **Linux/macOS Bash:**
 
 ```bash
-find .kiro/steering .kiro/skills .kiro/agents -type f -maxdepth 4 -print
+kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.json
 ```
 
-The folders have different purposes:
+Then confirm discovery:
 
-- `.kiro/steering/` records persistent project rules and facts.
-- `.kiro/skills/` contains reusable procedures loaded when relevant.
-- `.kiro/agents/` defines each custom agent's prompt, tools, trusted tools, restrictions, resources, and hooks.
-
-## 2. Validate and list the agents
-
-Validate the main agent for your workstation, then list all agents.
-
-**Windows PowerShell:**
-
-```powershell
-kiro-cli agent validate --path .kiro\agents\windows-upgrade-windows.json
+```text
 kiro-cli agent list
 ```
 
-**Linux/macOS Bash:**
+Do not continue until validation succeeds.
 
-```bash
-kiro-cli agent validate --path .kiro/agents/windows-upgrade.json
-kiro-cli agent list
-```
-
-The selected agent (`windows-upgrade-windows` on Windows or `windows-upgrade` on Linux/macOS) should appear under **Workspace**. If it does not, confirm that your terminal is in the repository root.
-
-The complete automated check is:
-
-**Windows:**
-
-```powershell
-py -3 scripts\check_kiro_prereqs.py
-```
-
-**Linux/macOS:**
-
-```bash
-python3 scripts/check_kiro_prereqs.py
-```
-
-## 3. Understand tool trust
-
-The agent configuration uses documented Kiro fields:
-
-- `tools` lists tools the agent may request.
-- `allowedTools` lists tools that run without an approval prompt.
-- `toolsSettings` restricts writable paths, shell commands, and AWS services.
-- `hooks.preToolUse` runs the destructive-command blocker before shell execution.
-- `hooks.postToolUse` runs the quick validator after the agent writes a file.
-
-Read, grep, glob, code intelligence, and AWS Knowledge MCP are trusted. Writes and AWS mutations are not in `allowedTools`, so Kiro asks before using them. Always read the proposed action before approving it.
-
-Do **not** start this workshop with `--trust-all-tools`; that bypasses the approval prompts the exercise is designed to demonstrate.
-
-## 4. Start the workshop agent with the v3 engine
-
-**Windows:**
+## 4. Run the agent you created
 
 ```text
-kiro-cli chat --v3 --agent windows-upgrade-windows
+kiro-cli chat --v3 --agent my-windows-upgrade
 ```
 
-**Linux/macOS:**
+Ask:
 
 ```text
-kiro-cli chat --v3 --agent windows-upgrade
+Using the workspace steering, explain why APP01 and DATA01 need different
+cutover designs. Cite the repository files that support your answer.
 ```
 
-At the Kiro prompt, enter:
-
-```text
-Summarize the workshop safety boundary and list actions requiring explicit approval. Do not call AWS and do not modify files.
-```
-
-Use these documented slash commands inside the chat:
+Inside chat, run:
 
 ```text
 /tools
-/hooks
-/help
 ```
 
-`/tools` shows available tools. `/hooks` should show the `preToolUse` and `postToolUse` hooks loaded from the agent configuration.
+The agent should expose only read-oriented tools. It cannot write files, run shell commands, or call AWS because those tools are not in `tools`.
 
-## 5. Verify the safety hook without changing AWS
+## 5. Add write and shell tools with restrictions
 
-Exit Kiro first, then test the hook directly.
+Exit the custom agent and return to plain Kiro. Ask it to update `my-windows-upgrade.json` as follows:
 
-**Windows PowerShell:**
+1. Add `write` and `shell` to `tools`.
+2. Keep them out of `allowedTools`, so each use requires approval.
+3. Add this `toolsSettings` object:
 
-```powershell
-'{"tool_input":{"command":"aws ec2 terminate-instances --instance-ids i-example"}}' |
-  py -3 scripts\hooks\block_destructive.py
-$LASTEXITCODE
+```json
+"toolsSettings": {
+  "write": {
+    "allowedPaths": [
+      "./results/participant/**"
+    ],
+    "deniedPaths": [
+      "./.env",
+      "./**/*.pem",
+      "./.kiro/**"
+    ]
+  },
+  "shell": {
+    "allowedCommands": [
+      "python3 tests/static/validate_repo.py*",
+      "py -3 tests/static/validate_repo.py*",
+      "git status*",
+      "git diff*"
+    ],
+    "deniedCommands": [
+      "aws ec2 terminate-instances*",
+      "aws cloudformation delete-stack*",
+      "rm -rf *",
+      "Remove-Item * -Recurse*"
+    ],
+    "autoAllowReadonly": true,
+    "denyByDefault": false
+  }
+}
 ```
 
-**Linux/macOS Bash:**
+Validate the agent again, restart it, and inspect `/tools`.
 
-```bash
-printf '%s' '{"tool_input":{"command":"aws ec2 terminate-instances --instance-ids i-example"}}' \
-  | python3 scripts/hooks/block_destructive.py
-echo $?
+Test the allowed path:
+
+```text
+Create results/participant/agent-permission-test.md containing one sentence
+that says this file was created after participant approval.
 ```
 
-Expected exit code: `2`. This is a local test with a fake instance ID; it does not call AWS.
+Kiro should request approval because `write` is not in `allowedTools`. Review the path and approve it.
 
-**Checkpoint:** the workstation-specific agent validates and appears in `kiro-cli agent list`, `/hooks` shows two supported hooks, and the local blocker exits with code 2.
+Then test the boundary:
+
+```text
+Replace README.md with the text "permission test".
+```
+
+Reject the request if Kiro asks. The configured write boundary should prevent that path, but the participant remains responsible for reviewing every proposed action.
+
+## 6. Understand Kiro permissions
+
+Kiro agent permissions use three layers:
+
+1. `tools` — what the agent can attempt.
+2. `allowedTools` — what can run automatically without asking.
+3. `toolsSettings` — path, command, and service boundaries for a tool.
+
+Approval prompts and agent restrictions are defense in depth. IAM remains authoritative for AWS permissions. Do not use `--trust-all-tools` in this workshop.
+
+## 7. Compare with the supplied reference agents
+
+Only after creating your own agent, compare it with:
+
+- `.kiro/agents/windows-upgrade.json` for Linux/macOS
+- `.kiro/agents/windows-upgrade-windows.json` for Windows
+
+The reference agents add AWS service boundaries, hooks, MCP, the workshop skill, and subagent support. Later modules will have you add those features to `my-windows-upgrade` yourself.
+
+**Checkpoint:** you created steering, created and validated `my-windows-upgrade`, ran it, added restricted write/shell tools, observed an approval prompt, and can explain the difference between `tools`, `allowedTools`, and `toolsSettings`.
