@@ -9,7 +9,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "results"
@@ -23,7 +23,7 @@ class AwsCliError(RuntimeError):
 @dataclass(frozen=True)
 class AwsContext:
     region: str
-    profile: str | None = None
+    profile: Optional[str] = None
 
     def command(self, service_and_args: list[str]) -> list[str]:
         command = ["aws", *service_and_args, "--region", self.region]
@@ -79,7 +79,7 @@ def require_confirmation(expected: str, *, yes: bool, message: str) -> None:
         raise SystemExit("Confirmation did not match; no change made.")
 
 
-def instance_tag_value(aws: AwsContext, instance_id: str, key: str) -> str | None:
+def instance_tag_value(aws: AwsContext, instance_id: str, key: str) -> Optional[str]:
     response = aws.call(["ec2", "describe-instances", "--instance-ids", instance_id])
     reservations = response.get("Reservations", [])
     instances = reservations[0].get("Instances", []) if reservations else []

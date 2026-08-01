@@ -36,17 +36,17 @@ This one-line AWS CLI command works in PowerShell and Bash:
 aws cloudformation describe-stacks --stack-name kiro-ws2025-lab --query "Stacks[0].Outputs" --region us-east-1
 ```
 
-Open `http://<LoadBalancerDns>/` and test:
+Open `http://<LoadBalancerDns>/` and test each expected route:
 
-```text
-/
-/health.html
-/spring/actuator/health
-/spring/api/info
-/next
-/next/api/health
-/data/api/status.php
-```
+| Route | Expected result |
+|---|---|
+| `/` | IIS-hosted Angular application |
+| `/health.html` | IIS baseline health |
+| `/spring/actuator/health` | nginx to Spring Boot |
+| `/spring/api/info` | Spring Boot sample API |
+| `/next` | nginx to Next.js |
+| `/next/api/health` | Next.js API |
+| `/data/api/status.php` | XAMPP/PHP status endpoint |
 
 ## Verify SSM
 
