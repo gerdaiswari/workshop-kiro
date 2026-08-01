@@ -19,14 +19,14 @@
 
 The script:
 
-1. Creates or reuses a region-unique S3 artifact bucket.
-2. Downloads XAMPP on the operator workstation when it is not already cached, validates its pinned SHA-256, and uploads it to the private bucket.
-3. Packages bootstrap scripts and application source.
-4. Deploys `infra/lab.yaml`.
-5. Waits for APP01 and DATA01 bootstrap signals.
-6. Writes stack state and outputs under `results/deployment/`.
+1. **Create an S3 bucket** (AWS cloud storage) — if one doesn't exist yet in this region, create it to store files.
+2. **Download XAMPP** (web application) — if not already saved locally, download it, check the security signature (SHA-256), upload to S3.
+3. **Package bootstrap scripts and application source code** — prepare setup files that EC2 will automatically run when servers start.
+4. **Deploy CloudFormation template** (`lab.yaml`) — this AWS template creates the network, security groups, and launches two EC2 servers (APP01 and DATA01).
+5. **Wait for bootstrap signals** — both servers are running their setup scripts automatically; wait until they finish and confirm they're ready.
+6. **Save outputs** — write server details (IP addresses, passwords, resource IDs) to `results/deployment/` folder.
 
-Bootstrap can take 30–90 minutes because DATA01 installs three database engines and SQL Server Express requires a two-stage extraction before setup. CloudFormation fails rather than declaring success when a bootstrap script fails.
+Bootstrap can take 30–90 minutes because DATA01 is installing three databases at once (PostgreSQL, MySQL, SQL Server). SQL Server installation is especially slow because it arrives as one big compressed package — it must be unpacked and verified before installation can even start. This takes extra time. Just wait; do not cancel or restart.
 
 ## Inspect outputs
 
@@ -72,7 +72,7 @@ which Windows service owns it, which endpoint proves behavior, and which externa
 downloads make bootstrap non-hermetic. Do not make changes.
 ```
 
-Notice what plain Kiro can already do: read the project, follow code relationships, and explain the architecture. In Module 02 you will create steering and your own focused agent so its behavior is repeatable and constrained.
+Notice what plain Kiro can already do: read the project, follow code relationships, and explain the architecture.
 
 **Checkpoint:** stack complete, both instances SSM Online, all seven URL routes respond, and plain Kiro accurately identifies the APP01 and DATA01 components.
 

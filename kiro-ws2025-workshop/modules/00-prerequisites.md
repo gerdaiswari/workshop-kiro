@@ -221,8 +221,6 @@ Budget approximately USD 15–35 for a complete run, depending on runtime and cu
 
 ## Non-goals
 
-- No production data, domain joins, certificates, or external integrations.
-- No proof of third-party vendor certification.
-- No database production cutover.
+This lab doesn't include production data, domain setup, SSL certificates, external systems, or live database cutover.
 
 **Checkpoint:** the Kiro preflight passes, `aws sts get-caller-identity` shows the intended sandbox account, both regional checks succeed, and the participant accepts the time and cost.
