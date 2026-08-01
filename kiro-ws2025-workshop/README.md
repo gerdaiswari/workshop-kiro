@@ -52,21 +52,21 @@ Before starting, review the lab infrastructure and application design:
 
 This is a facilitator-led, hands-on workshop. Modules 00–01 and the plain-Kiro introduction are completed first. During the long-running upgrade, participants continue with read-only/low-risk Kiro feature modules, then return to validation and cutover once both upgrades finish.
 
-| Order | Module | Topic | Duration |
-|---:|---|---|---:|
-| Pre-work | [00](modules/00-prerequisites.md) | Prerequisites, credentials, regional checks, and cost | 15 min |
-| Pre-work | [01](modules/01-lab-setup.md) | Deploy and verify the Windows Server 2019 lab | 30 min + bootstrap wait |
-| 1 | [02](modules/02-steering-and-permissions.md) | Create steering, an agent, and tool permissions | 20 min |
-| 2 | [03](modules/03-inventory-spec.md) | Inventory through SSM and Kiro Spec | 15 min |
-| 3 | [04](modules/04-compatibility-spec.md) | Compatibility analysis and evidence challenge | 10 min |
-| 4 | [05](modules/05-hooks-and-safety.md) | Create hooks, capture baselines and native backups | 10 min |
-| 5 | [06](modules/06-clone-upgrade-spec.md) | Start APP01 and DATA01 clone-upgrades in separate terminals | 5 min to start, then wait for both runbooks to finish |
-| 6 | [09](modules/09-mcp-integration.md) | Add and use AWS Knowledge MCP while upgrades run | 20 min |
-| 7 | [10](modules/10-skills-and-reuse.md) | Create a reusable skill and fleet plan while upgrades run | 20 min |
-| 8 | [10B](modules/10b-agents-and-subagents.md) | Create specialized agents, models, and subagents while upgrades run | 25 min |
-| 9 | [07](modules/07-validation-spec.md) | Launch Windows Server 2025 copies and run post-upgrade tests | 20 min |
-| 10 | [08](modules/08-cutover-rollback-spec.md) | Cutover/rollback simulation; DATA01 compatibility boundary | 15 min |
-| 11 | [11](modules/11-cleanup.md) | Remove all billable resources | 10 min |
+| Module | Topic | Duration |
+|---|---|---:|
+| [00](modules/00-prerequisites.md) | Prerequisites, credentials, regional checks, and cost | 15 min |
+| [01](modules/01-lab-setup.md) | Deploy and verify the Windows Server 2019 lab | 30 min + bootstrap wait |
+| [02](modules/02-steering-and-permissions.md) | Create steering, an agent, and tool permissions | 20 min |
+| [03](modules/03-inventory-spec.md) | Inventory through SSM and Kiro Spec | 15 min |
+| [04](modules/04-compatibility-spec.md) | Compatibility analysis and evidence challenge | 10 min |
+| [05](modules/05-hooks-and-safety.md) | Create hooks, capture baselines and native backups | 10 min |
+| [06](modules/06-clone-upgrade-spec.md) | Start APP01 and DATA01 clone-upgrades in separate terminals | 5 min to start, then wait for both runbooks to finish |
+| [09](modules/09-mcp-integration.md) | Add and use AWS Knowledge MCP while upgrades run | 20 min |
+| [10](modules/10-skills-and-reuse.md) | Create a reusable skill and fleet plan while upgrades run | 20 min |
+| [10B](modules/10b-agents-and-subagents.md) | Create specialized agents, models, and subagents while upgrades run | 25 min |
+| [07](modules/07-validation-spec.md) | Launch Windows Server 2025 copies and run post-upgrade tests | 20 min |
+| [08](modules/08-cutover-rollback-spec.md) | Cutover/rollback simulation; DATA01 compatibility boundary | 15 min |
+| [11](modules/11-cleanup.md) | Remove all billable resources | 10 min |
 
 Upgrade duration is controlled by AWS Systems Manager and Windows Update and can vary. Modules 09, 10, and 10B are designed to fill that wait; do not skip success checks in Module 07 merely to keep to a schedule.
 
