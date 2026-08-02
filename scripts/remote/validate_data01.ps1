@@ -31,11 +31,23 @@ try {
 } catch { Add-Check 'db.sqlserver-seed' $false 'query-failed' '3:6:DATA_OK_V1' $true $_.Exception.Message }
 
 $secrets = Get-Content 'C:\Workshop\secrets\databases.json' -Raw | ConvertFrom-Json
+$mysqlPreviousErrorAction = $ErrorActionPreference
 try {
     $mysql = (Get-ChildItem 'C:\Tools\mysql-*\bin\mysql.exe' | Select-Object -First 1).FullName
-    $value = (& $mysql -N -B -u root "-p$($secrets.mysql_root)" -e "SELECT CONCAT(COUNT(*), ':', SUM(quantity), ':', MIN(compatibility_marker)) FROM kiro_workshop.inventory_items;" 2>$null).Trim()
+    $env:MYSQL_PWD = [string]$secrets.mysql_root
+    $ErrorActionPreference = 'Continue'
+    $output = @(& $mysql -N -B -u root -e "SELECT CONCAT(COUNT(*), ':', SUM(quantity), ':', MIN(compatibility_marker)) FROM kiro_workshop.inventory_items;" 2>&1)
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $mysqlPreviousErrorAction
+    if ($exitCode -ne 0) { throw "mysql exited with code ${exitCode}: $($output -join ' ')" }
+    $value = (($output | ForEach-Object { [string]$_ } | Where-Object { $_ -notmatch '^mysql: \[Warning\]' }) -join "`n").Trim()
     Add-Check 'db.mysql-seed' ($value -eq '3:6:DATA_OK_V1') $value '3:6:DATA_OK_V1'
-} catch { Add-Check 'db.mysql-seed' $false 'query-failed' '3:6:DATA_OK_V1' $true $_.Exception.Message }
+} catch {
+    Add-Check 'db.mysql-seed' $false 'query-failed' '3:6:DATA_OK_V1' $true $_.Exception.Message
+} finally {
+    $ErrorActionPreference = $mysqlPreviousErrorAction
+    Remove-Item Env:MYSQL_PWD -ErrorAction SilentlyContinue
+}
 
 try {
     $env:PGPASSWORD = $secrets.postgres

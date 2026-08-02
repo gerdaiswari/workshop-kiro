@@ -12,8 +12,14 @@ function Test-ServiceCheck([string]$Name) {
 function Test-HttpCheck([string]$Id, [string]$Uri, [string]$Marker) {
     try {
         $response = Invoke-WebRequest -UseBasicParsing -Uri $Uri -TimeoutSec 15
-        $passed = $response.StatusCode -eq 200 -and $response.Content -match [regex]::Escape($Marker)
-        Add-Check $Id $passed "$($response.StatusCode):$Marker" "200:$Marker" $true ($response.Content.Substring(0, [math]::Min(160, $response.Content.Length)))
+        $content = if ($response.Content -is [byte[]]) {
+            [System.Text.Encoding]::UTF8.GetString([byte[]]$response.Content)
+        } else {
+            [string]$response.Content
+        }
+        $passed = $response.StatusCode -eq 200 -and $content -match [regex]::Escape($Marker)
+        $details = $content.Substring(0, [math]::Min(160, $content.Length))
+        Add-Check $Id $passed "$($response.StatusCode):$Marker" "200:$Marker" $true $details
     } catch { Add-Check $Id $false 'request-failed' "200:$Marker" $true $_.Exception.Message }
 }
 
@@ -27,7 +33,7 @@ Test-HttpCheck 'http.iis-angular' 'http://127.0.0.1/' 'ANGULAR_OK_V1'
 Test-HttpCheck 'http.iis-health' 'http://127.0.0.1/health.html' 'IIS_OK_V1'
 Test-HttpCheck 'http.spring-health' 'http://127.0.0.1:8080/actuator/health' '"status":"UP"'
 Test-HttpCheck 'http.spring-api' 'http://127.0.0.1:8080/api/info' 'SPRING_OK_V1'
-Test-HttpCheck 'http.next-page' 'http://127.0.0.1:3000/next/' 'NEXT_OK_V1'
+Test-HttpCheck 'http.next-page' 'http://127.0.0.1:3000/next' 'NEXT_OK_V1'
 Test-HttpCheck 'http.next-api' 'http://127.0.0.1:3000/next/api/health' 'NEXT_API_OK_V1'
 Test-HttpCheck 'http.nginx-health' 'http://127.0.0.1:8081/health' 'NGINX_OK_V1'
 Test-HttpCheck 'http.nginx-spring-proxy' 'http://127.0.0.1:8081/spring/api/info' 'SPRING_OK_V1'
