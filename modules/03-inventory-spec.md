@@ -24,7 +24,7 @@ At the Kiro prompt, enter:
 ```text
 Review the existing inventory-assessment Spec under .kiro/specs/.
 Explain its requirements, design, tasks, outputs, safety boundaries,
-and completion evidence to a participant who has never used Kiro.
+and completion evidence in plain language.
 Do not edit files and do not call AWS.
 ```
 
