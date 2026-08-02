@@ -48,7 +48,7 @@ Create .kiro/steering/participant-environment.md with manual inclusion. Include:
 
 This gives you a reference for how to describe your own servers in steering later. Replace the values with your real server names, roles, and recovery objectives.
 
-Run `/context show` to confirm that `participant-environment.md` is not loaded (because it's marked manual). When you start the adaptation exercise, load it manually with `/context add participant-environment.md`. Then run `/context show` again to verify it's now loaded.
+Run `/context show` to confirm that `participant-environment.md` is not loaded (because it's marked manual). When you start the adaptation exercise, load it manually with `/context add .kiro/steering/participant-environment.md`. Then run `/context show` again to verify it's now loaded.
 
 **What you learned:** Kiro can help you create structured documentation — you describe what you need, and it generates the file with the right format.
 
