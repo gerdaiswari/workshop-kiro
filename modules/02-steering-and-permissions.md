@@ -73,7 +73,7 @@ Create .kiro/agents/my-windows-upgrade.json as a read-only V3 agent. Include:
 6. Welcome message: says the agent starts in read-only mode
 ```
 
-Review the proposed file. Then run `/upgrade-agent` in the same session to ensure V3 compatibility.
+Review the proposed file. Then run `/upgrade-agent` — if your new agent appears in the list, select it to add V3 permissions. If it doesn't appear, Kiro already created it in V3 format.
 
 Exit Kiro and validate:
 
