@@ -32,48 +32,23 @@ Steering gives Kiro durable instructions and context. Choose its scope based on 
 
 Run `/context show`. The supplied `.kiro/steering/safety-rules.md` is the always-loaded example. Do not create another copy of the same safety rules: duplication consumes context and can drift.
 
-Instead, create a manual profile for the environment you would assess after the workshop:
+Instead, create a manual steering file that captures environment facts for this Windows upgrade lab:
 
 ```text
-Create `.kiro/steering/participant-environment.md`. Mark it as `inclusion: manual`
-so it won't auto-load into every chat.
-
-Add concise placeholders for source and target Windows versions, server scope,
-application owners, state classification, dependencies, identity constraints,
-RTO, RPO, maintenance window, vendor support, test oracle, backup/restore owner,
-cutover owner, and rollback owner. Set every unknown value to UNKNOWN.
-
-Do not copy APP01, DATA01, ports, tags, region, stack name, or synthetic test
-expectations into this profile. Show the proposed file and ask before writing it.
+Create .kiro/steering/participant-environment.md with manual inclusion. Include:
+1. Source and target Windows versions (2019 to 2025)
+2. Server roles (APP01 is stateless web apps, DATA01 is stateful databases)
+3. Key dependencies (IIS, nginx, Java 17, Node.js 20, SQL Server Express, MySQL, PostgreSQL)
+4. Identity model (SSM-only, no domain join)
+5. Backup strategy (native database backups on DATA01)
+6. Cutover design (APP01 uses ALB target switch; DATA01 is clone-only, not cutover-ready)
+7. Rollback method (re-register source APP01 in target group)
+8. RTO/RPO (lab has no SLA; mark as "define for production")
+9. Maintenance window (lab: anytime; mark as "define for production")
+10. Vendor support status for each dependency on Windows Server 2025
 ```
 
-Example for a real production environment (adapt to your own servers):
-
-```yaml
----
-inclusion: manual
----
-
-# Participant environment profile
-
-| Field | Value |
-|---|---|
-| Source Windows version | Windows Server 2019 Datacenter |
-| Target Windows version | Windows Server 2025 Standard |
-| Server scope | 3 web servers, 1 database server |
-| Application owners | UNKNOWN |
-| State classification | Web servers: stateless; DB server: stateful |
-| Dependencies | Active Directory, SQL Server 2019, .NET 6 |
-| Identity constraints | Domain-joined, gMSA for services |
-| RTO | 4 hours |
-| RPO | 1 hour |
-| Maintenance window | Saturday 22:00–06:00 UTC |
-| Vendor support | SQL Server 2019 on WS2025: UNKNOWN |
-| Test oracle | UNKNOWN |
-| Backup/restore owner | UNKNOWN |
-| Cutover owner | UNKNOWN |
-| Rollback owner | UNKNOWN |
-```
+This gives you a reference for how to describe your own production environment in steering later. Replace the lab values with your real servers, owners, dependencies, and recovery objectives.
 
 Run `/context show` to confirm that `participant-environment.md` is not loaded (because it's marked manual). When you start the adaptation exercise, load it manually with `/context add participant-environment.md`. Then run `/context show` again to verify it's now loaded.
 
