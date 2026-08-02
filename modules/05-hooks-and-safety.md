@@ -103,6 +103,8 @@ Expected exit code: `2`.
 
 Do not attach a hook that fails these two tests.
 
+This shows that Kiro can help you write safety automation — you describe what should be blocked, and it generates a working script with the correct input/output contract that you can test independently before trusting it.
+
 ## 4. Add hooks to your agent
 
 Use plain Kiro to update `.kiro/agents/my-windows-upgrade.json`. Add a top-level `hooks` object using the command for your workstation.

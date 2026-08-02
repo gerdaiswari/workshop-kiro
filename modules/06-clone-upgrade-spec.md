@@ -23,6 +23,8 @@ Do not call AWS and do not edit files.
 
 Do not run upgrade tasks unattended or with `--trust-all-tools`. The deterministic script below requires typed confirmation for each server.
 
+This shows that Kiro can help you prepare for a high-impact change — it reads your infrastructure code and evidence files, then summarizes exactly what will happen, what it will cost, how long it takes, and what the rollback looks like, so you make an informed decision before typing "yes".
+
 ## 2. Start APP01 in terminal 1
 
 **Windows PowerShell:**
@@ -103,6 +105,8 @@ A failure is evidence, not permission to modify the source blindly. Start a norm
 ```text
 kiro-cli chat --v3 --agent my-windows-upgrade
 ```
+
+This shows that Kiro can help you troubleshoot automation failures — it reads execution logs and error details, correlates them with prerequisites and known issues, and proposes targeted fixes without touching the running system.
 
 ## Transfer to your environment
 

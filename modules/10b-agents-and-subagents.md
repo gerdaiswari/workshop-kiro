@@ -173,6 +173,8 @@ Show the command before running it.
 
 Notice that tool boundaries—not only the prompt—separate their responsibilities.
 
+This shows that Kiro can help you split complex work into specialized roles — a reviewer that only reads and challenges, an executor that only runs approved checks — so each agent does one job well with the minimum permissions needed.
+
 ## 6. Enable subagents on your main agent
 
 Enable Kiro's documented subagent setting:
@@ -199,6 +201,8 @@ combined report. Do not call AWS and do not modify files.
 ```
 
 Subagents improve separation of duties but do not remove human approval or IAM boundaries.
+
+This shows that Kiro can help you orchestrate multi-step workflows — your main agent delegates tasks to specialists (run checks → review results), combines their outputs into one report, and you stay in control of what each agent is allowed to do.
 
 ## 7. Compare with the supplied multi-agent design
 

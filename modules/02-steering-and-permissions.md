@@ -19,7 +19,7 @@ What Kiro workspace configuration folders exist in this repository, and what is
 the purpose of steering, agents, skills, hooks, and MCP? Read only; do not edit.
 ```
 
-This establishes the starting point: plain Kiro has general capabilities but no role tailored to your upgrade exercise.
+This shows that Kiro can read your project files, follow code relationships, and explain your architecture — without you having to configure anything first.
 
 ## 2. Create scoped steering without duplicating context
 
@@ -49,7 +49,7 @@ expectations into this profile. Show the proposed file and ask before writing it
 
 Restart Kiro and run `/context show` again. The new manual file should not be loaded automatically. Add it deliberately with `/context add` only for an adaptation exercise, then inspect `/context show` again.
 
-**What you learned:** always-loaded steering protects every task; manual steering keeps environment-specific facts available without paying the context cost on unrelated turns. Unknown customer facts must remain unknown.
+**What you learned:** Kiro can help you create structured documentation with the right format and placeholders — you describe what you need, and it generates the file. Steering controls *when* Kiro loads that context: `always` means safety rules are enforced in every conversation; `manual` means environment-specific facts are only loaded when relevant, saving context budget for the actual task.
 
 ## 3. Create a minimal read-only agent
 
@@ -80,6 +80,8 @@ Show the proposed JSON and ask for approval before writing it.
 ```
 
 Review the proposed agent. If you agree, approve the write. If you want different behavior, ask Kiro to revise the prompt or description without weakening the safety boundaries.
+
+This shows that Kiro can help you scaffold configuration files from a natural-language description — you tell it what the agent should do, and it generates valid JSON with the correct schema.
 
 The important fields are:
 
@@ -134,6 +136,8 @@ Inside chat, run:
 ```
 
 The agent should expose only read-oriented tools. It cannot write files, run shell commands, or call AWS because those tools are not in `tools`.
+
+This shows that Kiro can help you analyze and reason about your project while respecting the boundaries you defined — it reads code, follows the steering rules, and gives answers grounded in repository files rather than guessing.
 
 ## 5. Add write and shell tools with restrictions
 
@@ -192,6 +196,8 @@ Replace README.md with the text "permission test".
 ```
 
 Reject the request if Kiro asks. The configured write boundary should prevent that path, but the participant remains responsible for reviewing every proposed action.
+
+This shows that Kiro can help you write files and run commands while staying within the guardrails you set — it asks for approval on sensitive actions and respects path/command restrictions, so you stay in control of what actually changes.
 
 ## 6. Understand Kiro permissions
 

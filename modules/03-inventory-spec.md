@@ -32,6 +32,8 @@ The repository already contains:
 .kiro/specs/inventory-assessment/tasks.md
 ```
 
+This shows that Kiro can help you understand existing project artifacts — it reads structured documents and explains their purpose, scope, and relationships in plain language, so you don't have to parse them yourself.
+
 To practice creating another Spec, remain in Spec mode and ask:
 
 ```text
@@ -43,6 +45,8 @@ do not execute the tasks.
 ```
 
 Review generated files before allowing any execution.
+
+This shows that Kiro can help you break down a complex task into structured requirements, design decisions, and actionable steps — you describe the goal, and it produces a plan you can review before anything runs.
 
 ## 3. Collect measured inventory
 
@@ -94,6 +98,8 @@ roles, and missing test oracles. Do not modify either file and do not call AWS.
 ```
 
 Program and service discovery is evidence, not proof of ownership or vendor support. Unknowns remain unknown until an application owner resolves them.
+
+This shows that Kiro can help you compare data sets and find discrepancies — it reads JSON/YAML, cross-references fields, and highlights what doesn't match, what's missing, and what needs human decision.
 
 ## Transfer to your environment
 

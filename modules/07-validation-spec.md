@@ -87,6 +87,8 @@ issue. Propose the smallest reversible fix and its verification steps.
 Do not change source APP01 and do not call AWS.
 ```
 
+This shows that Kiro can help you diagnose test failures — it correlates failed test output with the system inventory, identifies the root cause, and proposes the minimal fix, so you spend time fixing instead of searching.
+
 ## 4. Repair and verify
 
 **Windows PowerShell:**

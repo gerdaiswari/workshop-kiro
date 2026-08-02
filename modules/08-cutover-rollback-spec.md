@@ -72,6 +72,8 @@ Ask it to compare:
 
 Require RTO/RPO, identity, sessions, file state, dependencies, observation periods, and rollback ownership in each design. This is an architecture discussion; do not call AWS or change the lab.
 
+This shows that Kiro can help you explore architecture trade-offs — it compares multiple cutover patterns side by side, maps each to your constraints (RTO, RPO, state, dependencies), and helps you choose the right approach before committing to one.
+
 ## Transfer to your environment
 
 - **Lab exercise:** APP01 demonstrates health-gated ALB target switching and reversal; DATA01 intentionally demonstrates why a live stateful clone is not cutover-ready.

@@ -43,6 +43,8 @@ and do not call AWS account APIs.
 
 The deterministic analyzer remains the source of pass/warning/blocker results. Your agent adds structured reasoning but must not invent current AWS or vendor facts. Module 09 will add AWS Knowledge MCP for documentation checks.
 
+This shows that Kiro can help you organize and interpret complex assessment results — it separates concerns (eligibility, compatibility, vendor support, test coverage, cutover readiness) and maps each finding back to evidence files, so you get a structured picture instead of a flat report.
+
 The analyzer should classify DATA01 as eligible for clone compatibility testing but not for AMI-only production cutover.
 
 ## 3. Request a fresh read-only challenge
@@ -62,6 +64,8 @@ evidence. Return findings only; do not edit files or call AWS.
 ```
 
 This is a simple second pass, not a fully isolated specialist. In Module 10B you will create a dedicated reviewer agent with its own model and restricted tools.
+
+This shows that Kiro can help you challenge your own work — it acts as an independent reviewer that pokes holes in assumptions, finds missing evidence, and identifies risks you might have overlooked.
 
 ## Transfer to your environment
 

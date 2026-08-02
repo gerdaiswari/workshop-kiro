@@ -14,6 +14,8 @@ A language model may have stale AWS product knowledge. The read-only AWS Knowled
 
 In this workshop MCP is used for documentation only. It does not authenticate to your AWS account, inspect your instances, or perform upgrades.
 
+This shows that Kiro can help you access current AWS documentation on demand — instead of searching docs manually, Kiro retrieves the latest information and source links directly in your conversation, so your decisions are based on current facts rather than stale training data.
+
 ## 2. Add the MCP server to your agent
 
 Start plain Kiro:
@@ -113,6 +115,8 @@ requirements from recommendations and include source links. Do not edit files.
 ```
 
 MCP improves documentation currency; it does not prove application compatibility or replace deterministic tests.
+
+This shows that Kiro can help you audit your infrastructure against current best practices — it cross-references your CloudFormation templates with live AWS documentation and separates hard requirements from recommendations, with source links you can verify.
 
 ## 7. Compare with the reference configuration
 

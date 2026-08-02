@@ -110,6 +110,8 @@ A credible plan should add:
 7. AMI/snapshot retention and cleanup policy.
 8. Exception workflow for unsupported or untestable applications.
 
+This shows that Kiro can help you scale a proven procedure into a fleet plan — it follows the skill's workflow steps, identifies what changes at scale (waves, gates, concurrency, exceptions), and produces a structured rollout plan instead of a flat to-do list.
+
 ## 5. Suggested wave gates
 
 - **Gate A:** complete inventory, owner, RTO/RPO, dependencies.
@@ -157,6 +159,8 @@ whether it is ready to upgrade.
 ```
 
 The correct response should identify blockers and propose discovery/architecture work—not claim autonomous success.
+
+This shows that Kiro can help you identify what's NOT ready — it applies the procedure honestly, flags missing prerequisites as blockers, and tells you what discovery work is needed before proceeding, instead of giving you false confidence.
 
 **Checkpoint:** you created a valid skill with front matter, attached it through `resources`, activated it, used it for fleet planning, and can explain how skills differ from steering and agent prompts.
 
