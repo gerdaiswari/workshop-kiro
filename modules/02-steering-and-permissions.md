@@ -67,7 +67,7 @@ Create .kiro/agents/my-windows-upgrade.json as a read-only agent. Include:
 1. Role: Windows EC2 clone-upgrade assistant
 2. Behavior: follow all workspace steering, use only measured evidence, call out
    anything that's not verified, never recommend in-place source upgrade
-3. Tools and allowedTools: read, grep, glob, and code
+3. Tools and allowedTools: only "read"
 4. Resources: file://README.md, file://.kiro/steering/**/*.md, and file://inventory/assumed-inventory.yaml
 5. Welcome message: says the agent starts in read-only mode
 ```
@@ -134,19 +134,13 @@ Notice the difference:
 
 > **Key takeaway:** A custom agent gives Kiro a consistent role, loads relevant context automatically, and enforces behavior boundaries you defined. Without an agent, Kiro is helpful but generic.
 
-Inside chat, run:
+Inside chat, run `/tools` to see what's available. Then try asking it to run a command:
 
 ```text
-/tools
+Run git status
 ```
 
-You'll see the tools available to this agent. Try asking it to do something outside its boundaries:
-
-```text
-Delete README.md
-```
-
-The agent should refuse or be blocked — it doesn't have write/shell capabilities yet. This proves the tool boundaries are working.
+The agent should refuse — it doesn't have `shell` in its tools, so it cannot execute commands. This proves that tool boundaries limit what the agent can do.
 
 ## 5. Add write and shell with permissions
 
