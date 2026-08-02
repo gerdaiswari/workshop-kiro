@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import time
-from pathlib import Path
 from typing import Any
 
 from lib.aws_cli import AwsContext, RESULTS, read_json, require_confirmation, stack_outputs, utc_now, write_json
 
+RUNBOOK_NAME = "AWSEC2-CloneInstanceAndUpgradeWindows"
+TARGET_VERSION_PARAMETER_NAMES = ("TargetWindowsVersion", "TargetWindowVersion")
 TERMINAL = {"Success", "Failed", "TimedOut", "Cancelled"}
 AMI = re.compile(r"ami-[0-9a-f]+")
 
@@ -26,6 +28,15 @@ def ami_candidates(value: Any, key: str = "") -> list[tuple[str, str]]:
     return found
 
 
+def select_target_version_parameter(parameter_names: set[str]) -> str:
+    for candidate in TARGET_VERSION_PARAMETER_NAMES:
+        if candidate in parameter_names:
+            return candidate
+    expected = " or ".join(TARGET_VERSION_PARAMETER_NAMES)
+    available = ", ".join(sorted(parameter_names))
+    raise ValueError(f"Runbook exposes neither {expected}; available parameters: {available}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", required=True, choices=("APP01", "DATA01"))
@@ -36,6 +47,12 @@ def main() -> int:
     parser.add_argument("--poll-seconds", type=int, default=30)
     args = parser.parse_args()
     aws = AwsContext(args.region, args.profile)
+
+    document = aws.call(["ssm", "describe-document", "--name", RUNBOOK_NAME])["Document"]
+    document_version = str(document["DocumentVersion"])
+    parameter_names = {item["Name"] for item in document.get("Parameters", [])}
+    target_version_parameter = select_target_version_parameter(parameter_names)
+
     outputs = stack_outputs(aws, args.stack_name)
     source_id = outputs["AppInstanceId" if args.server == "APP01" else "DataInstanceId"]
 
@@ -55,27 +72,38 @@ def main() -> int:
         "IamInstanceProfile": [outputs["InstanceProfileName"]],
         "InstanceId": [source_id],
         "SubnetId": [outputs["PublicSubnetId"]],
-        "TargetWindowsVersion": ["2025"],
+        target_version_parameter: ["2025"],
         "KeepPreUpgradeImageBackUp": ["True"],
         "RebootInstanceBeforeTakingImage": ["False"],
     }
     require_confirmation(
         args.server, yes=args.yes,
         message=(
-            f"About to start AWSEC2-CloneInstanceAndUpgradeWindows for {args.server} ({source_id}).\n"
-            "Target=2025; source reboot=False; retain pre-upgrade AMI=True; expected up to ~2 hours.\n"
+            f"About to start {RUNBOOK_NAME} version {document_version} for {args.server} ({source_id}).\n"
+            f"{target_version_parameter}=2025; source reboot=False; retain pre-upgrade AMI=True; "
+            "expected up to ~2 hours.\n"
             "The runbook creates billable temporary EC2/EBS/AMI resources."
         ),
     )
     started = utc_now()
     response = aws.call([
         "ssm", "start-automation-execution",
-        "--document-name", "AWSEC2-CloneInstanceAndUpgradeWindows",
-        "--parameters", __import__("json").dumps(parameters),
-        "--tags", f"Key=Project,Value=kiro-ws2025-workshop", f"Key=Role,Value={args.server}",
+        "--document-name", RUNBOOK_NAME,
+        "--document-version", document_version,
+        "--parameters", json.dumps(parameters),
+        "--tags", "Key=Project,Value=kiro-ws2025-workshop", f"Key=Role,Value={args.server}",
     ])
     execution_id = response["AutomationExecutionId"]
     path = RESULTS / f"upgrades/{args.server}.json"
+    evidence: dict[str, Any] = {
+        "server": args.server, "source_instance_id": source_id, "execution_id": execution_id,
+        "started_by_script_at": started, "last_polled_at": None, "status": "Starting",
+        "document_name": RUNBOOK_NAME, "document_version": document_version,
+        "target_version_parameter": target_version_parameter,
+        "parameters": parameters, "automation_execution": {},
+    }
+    write_json(path, evidence)
+
     last_status = None
     execution: dict[str, Any] = {}
     while True:
@@ -84,11 +112,10 @@ def main() -> int:
         if status != last_status:
             print(f"{utc_now()} {args.server} {execution_id}: {status}", flush=True)
             last_status = status
-        evidence = {
-            "server": args.server, "source_instance_id": source_id, "execution_id": execution_id,
-            "started_by_script_at": started, "last_polled_at": utc_now(), "status": status,
-            "parameters": parameters, "automation_execution": execution,
-        }
+        evidence.update({
+            "last_polled_at": utc_now(), "status": status,
+            "automation_execution": execution,
+        })
         write_json(path, evidence)
         if status in TERMINAL:
             break

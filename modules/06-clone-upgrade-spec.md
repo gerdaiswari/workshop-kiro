@@ -61,6 +61,10 @@ Do not run upgrade tasks unattended or with `--trust-all-tools` — this is exac
 
 This shows that Kiro can help you prepare for a high-impact change — it reads your infrastructure code and evidence files, then summarizes exactly what will happen, what it will cost, how long it takes, and what the rollback looks like, so you make an informed decision before typing "yes".
 
+### Runbook parameter spelling
+
+The AWS documentation names the target input `TargetWindowsVersion`, but AWS-owned runbook version 46 in `us-east-1` exposes `TargetWindowVersion`. The script does not assume either spelling. Before approval, it reads the regional runbook schema, selects the spelling that actually exists, displays it with the document version, and pins that same version when starting Automation. If neither spelling exists, the script stops without creating an execution.
+
 ## 2. Start APP01 in terminal 1
 
 In Terminal 1, complete the credential export and `get-caller-identity` verification above, then start APP01.
@@ -85,13 +89,14 @@ python3 scripts/04_start_upgrade.py \
 
 Type `APP01` when prompted — this typed confirmation is the actual approval gate; the script won't proceed without it. Keep this terminal open: the script polls until the automation reaches a terminal state (success or failure) and continuously updates `results/upgrades/APP01.json`, so you can watch progress without re-running anything.
 
-The expected runbook inputs include:
+The expected runbook inputs include the target-version spelling discovered from the pinned schema:
 
 ```text
 IamInstanceProfile=<stack output>
 InstanceId=<APP01 source ID>
 SubnetId=<public subnet>
-TargetWindowsVersion=2025
+TargetWindowVersion=2025       # AWS runbook v46 runtime spelling
+# or TargetWindowsVersion=2025 # documented spelling, if exposed by the region
 KeepPreUpgradeImageBackUp=True
 RebootInstanceBeforeTakingImage=False
 ```
