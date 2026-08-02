@@ -126,44 +126,33 @@ This shows that Kiro can help you analyze and reason about your project while re
 
 ## 5. Add write and shell tools with restrictions
 
-Exit the custom agent and return to plain Kiro. Ask it to update `my-windows-upgrade.json` as follows:
+Exit the custom agent (`/quit`) and start plain Kiro:
 
-1. Add `write` and `shell` to `tools`.
-2. Keep them out of `allowedTools`, so each use requires approval.
-3. Add this `toolsSettings` object:
-
-```json
-"toolsSettings": {
-  "write": {
-    "allowedPaths": [
-      "./results/participant/**"
-    ],
-    "deniedPaths": [
-      "./.env",
-      "./**/*.pem",
-      "./.kiro/**"
-    ]
-  },
-  "shell": {
-    "allowedCommands": [
-      "python3 tests/static/validate_repo.py*",
-      "py -3 tests/static/validate_repo.py*",
-      "git status*",
-      "git diff*"
-    ],
-    "deniedCommands": [
-      "aws ec2 terminate-instances*",
-      "aws cloudformation delete-stack*",
-      "rm -rf *",
-      "Remove-Item * -Recurse*"
-    ],
-    "autoAllowReadonly": true,
-    "denyByDefault": false
-  }
-}
+```text
+kiro-cli chat --v3
 ```
 
-Validate the agent again, restart it, and inspect `/tools`.
+Ask Kiro to add write and shell capabilities to your agent:
+
+```text
+Update .kiro/agents/my-windows-upgrade.json:
+1. Give the agent write and shell capabilities, but require approval before each use
+2. Only allow writing to ./results/participant/ — block .env, .pem, and .kiro/
+3. Only allow running: validate_repo.py, git status, git diff
+4. Block dangerous commands: terminate-instances, delete-stack, rm -rf, Remove-Item -Recurse
+```
+
+After Kiro makes the changes, run `/upgrade-agent` to update the permissions block, then exit and validate:
+
+```bash
+kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.json
+```
+
+Restart with your agent and run `/tools` to confirm write and shell now appear.
+
+```text
+kiro-cli chat --v3 --agent my-windows-upgrade
+```
 
 Test the allowed path:
 
@@ -180,7 +169,7 @@ Then test the boundary:
 Replace README.md with the text "permission test".
 ```
 
-Reject the request if Kiro asks. The configured write boundary should prevent that path, but the participant remains responsible for reviewing every proposed action.
+Reject the request. The configured write boundary prevents that path — but you are still responsible for reviewing every proposed action.
 
 This shows that Kiro can help you write files and run commands while staying within the guardrails you set — it asks for approval on sensitive actions and respects path/command restrictions, so you stay in control of what actually changes.
 
