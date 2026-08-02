@@ -74,8 +74,17 @@ Create .kiro/agents/my-windows-upgrade.json as a read-only agent. Include:
 
 Review the proposed file. Exit Kiro and validate:
 
+**Linux/macOS:**
+
 ```bash
 kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.json
+kiro-cli agent list
+```
+
+**Windows PowerShell:**
+
+```powershell
+kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.json
 kiro-cli agent list
 ```
 
@@ -93,18 +102,37 @@ Now start your agent:
 kiro-cli chat --v3 --agent my-windows-upgrade
 ```
 
-## 4. Run the agent you created
+## 4. Compare: with agent vs without agent
+
+First, ask the same question **without** a custom agent:
+
+```text
+kiro-cli chat --v3
+```
+
+```text
+Explain why APP01 and DATA01 need different cutover designs.
+```
+
+Notice: plain Kiro gives a general answer. It may not reference your steering rules or flag unverified claims.
+
+Now ask the same question **with** your custom agent:
 
 ```text
 kiro-cli chat --v3 --agent my-windows-upgrade
 ```
 
-Ask:
-
 ```text
-Using the workspace steering, explain why APP01 and DATA01 need different
-cutover designs. Cite the repository files that support your answer.
+Explain why APP01 and DATA01 need different cutover designs.
 ```
+
+Notice the difference:
+- The agent follows your steering (safety rules, environment profile)
+- It cites specific repository files as evidence
+- It marks anything unverified as unverified
+- It refuses to recommend in-place upgrades
+
+> **Key takeaway:** A custom agent gives Kiro a consistent role, loads relevant context automatically, and enforces behavior boundaries you defined. Without an agent, Kiro is helpful but generic.
 
 Inside chat, run:
 
@@ -112,9 +140,13 @@ Inside chat, run:
 /tools
 ```
 
-You'll see `read` (includes file reading, search, and diagnostics) and `write`. Even though `write` appears in the list, the agent's permissions only allow `fs_read` — any write attempt will be blocked or require approval. Shell and AWS tools are not available.
+You'll see the tools available to this agent. Try asking it to do something outside its boundaries:
 
-This shows that Kiro can help you analyze and reason about your project while respecting the permissions you defined — it reads code, follows the steering rules, and gives answers grounded in repository files.
+```text
+Delete README.md
+```
+
+The agent should refuse or be blocked — it doesn't have write/shell capabilities yet. This proves the tool boundaries are working.
 
 ## 5. Add write and shell with permissions
 
@@ -130,8 +162,16 @@ Update .kiro/agents/my-windows-upgrade.json:
 
 After Kiro updates the file, exit and validate:
 
+**Linux/macOS:**
+
 ```bash
 kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.json
+```
+
+**Windows PowerShell:**
+
+```powershell
+kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.json
 ```
 
 Then start a new session and run `/upgrade-agent` to update V3 permissions. Start your agent:
