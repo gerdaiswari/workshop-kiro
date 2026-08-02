@@ -1,0 +1,49 @@
+workshop:
+  source_os: Windows Server 2019 Datacenter English Full Base
+  target_os: Windows Server 2025
+  region_example: ap-southeast-1
+  administration: AWS Systems Manager Session Manager and Run Command
+  direct_inbound_admin: false
+  data_classification: synthetic lab data only
+servers:
+  - name: APP01
+    role: stateless-application
+    instance_type: t3.large
+    nitro: true
+    root_volume_gib: 80
+    workloads:
+      - {name: IIS, port: 80, artifact: Angular SPA}
+      - {name: Spring Boot, port: 8080, runtime: Java 17}
+      - {name: Next.js, port: 3000, runtime: Node.js 20}
+      - {name: nginx, port: 8081, purpose: reverse proxy}
+    mandatory_tests:
+      - Windows reports target OS
+      - W3SVC, KiroSpring, KiroNext, and nginx services running
+      - Angular marker renders
+      - Spring Actuator reports UP
+      - Next health API reports ok
+      - nginx proxy routes respond
+    cutover: ALB target switch simulation allowed after approval
+  - name: DATA01
+    role: stateful-database-compatibility
+    instance_type: t3.xlarge
+    nitro: true
+    root_volume_gib: 100
+    workloads:
+      - {name: XAMPP Apache and PHP, port: 8082}
+      - {name: SQL Server Express, instance: SQLEXPRESS}
+      - {name: MySQL, port: 3306, version_family: 8.0}
+      - {name: PostgreSQL, port: 5432, version_family: 15}
+    mandatory_tests:
+      - Windows reports target OS
+      - Database and Apache services running
+      - Seed row counts and checksums match baseline
+      - Native backup files exist
+      - PHP status endpoint responds
+    cutover: forbidden; clone is compatibility-only and point-in-time
+known_exclusions:
+  - Active Directory domain controller
+  - Windows failover cluster
+  - Remote Desktop Services roles
+  - BYOL Windows media
+  - production data or personal data
