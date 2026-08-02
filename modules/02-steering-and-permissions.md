@@ -102,37 +102,17 @@ Now start your agent:
 kiro-cli chat --v3 --agent my-windows-upgrade
 ```
 
-## 4. Compare: with agent vs without agent
-
-First, ask the same question **without** a custom agent:
-
-```text
-kiro-cli chat --v3
-```
-
-```text
-Explain why APP01 and DATA01 need different cutover designs.
-```
-
-Notice: plain Kiro gives a general answer. It may not reference your steering rules or flag unverified claims.
-
-Now ask the same question **with** your custom agent:
+## 4. Run your agent
 
 ```text
 kiro-cli chat --v3 --agent my-windows-upgrade
 ```
 
+Ask:
+
 ```text
 Explain why APP01 and DATA01 need different cutover designs.
 ```
-
-Notice the difference:
-- The agent follows your steering (safety rules, environment profile)
-- It cites specific repository files as evidence
-- It marks anything unverified as unverified
-- It refuses to recommend in-place upgrades
-
-> **Key takeaway:** A custom agent gives Kiro a consistent role, loads relevant context automatically, and enforces behavior boundaries you defined. Without an agent, Kiro is helpful but generic.
 
 Inside chat, run `/tools` to see what's available. Then try asking it to run a command:
 
