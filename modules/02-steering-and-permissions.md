@@ -161,7 +161,7 @@ Create results/participant/agent-permission-test.md containing one sentence
 that says this file was created after participant approval.
 ```
 
-Kiro should request approval because `write` is not in `allowedTools`. Review the path and approve it.
+Kiro writes the file directly because the path matches the allowed write rule (`./results/participant/**`).
 
 Then test the boundary:
 
@@ -169,7 +169,7 @@ Then test the boundary:
 Replace README.md with the text "permission test".
 ```
 
-Reject the request. The configured write boundary prevents that path — but you are still responsible for reviewing every proposed action.
+This should be blocked — README.md is outside the allowed write paths. Permissions control what the agent can do automatically versus what gets denied.
 
 This shows that Kiro can help you write files and run commands while staying within the guardrails you set — it asks for approval on sensitive actions and respects path/command restrictions, so you stay in control of what actually changes.
 
