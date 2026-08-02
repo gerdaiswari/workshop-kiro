@@ -103,7 +103,7 @@ A quick guide to what each field does:
 - `tools` — the full list of capabilities this agent is even allowed to request (read, write, grep, glob, shell). Anything not listed here is unavailable no matter what.
 - `allowedTools` — a subset of `tools` that Kiro can use *without pausing to ask you* for approval each time. Here that's just read-only inspection (`read`, `grep`, `glob`); every write and shell request will still prompt you.
 - `toolsSettings.write.allowedPaths` / `deniedPaths` — even when a write is approved, it can only land under `results/participant/**`. Sensitive files like `.env`, `.pem` keys, and the `.kiro/` config folder are explicitly denied so the agent can never touch them, even by mistake.
-- `toolsSettings.shell.allowedCommands` / `deniedCommands` — the agent can only run a short allowlist of harmless commands (running the validator script, `git status`, `git diff`). Destructive AWS calls and recursive deletes are explicitly denied as a backstop, and `denyByDefault: true` means anything not on the allowlist is refused rather than silently permitted.
+- `toolsSettings.shell.allowedCommands` / `deniedCommands` — the agent can only run a short allowlist of harmless commands (running the validator script, `git status`, `git diff`). Destructive AWS calls and recursive deletes (`rm -rf *`) are explicitly denied as a backstop, and `denyByDefault: true` means anything not on the allowlist is refused rather than silently permitted.
 
 Exit Kiro and validate from the repository root. `agent validate` checks that the JSON file matches the schema Kiro expects (correct field names, valid values) — it doesn't check AWS permissions, just that the file itself is well-formed and usable.
 
@@ -185,10 +185,10 @@ The command should run because it is allowlisted.
 **Denied shell:**
 
 ```text
-Run echo blocked-test.
+Run rm -rf results/participant/agent-permission-test.md.
 ```
 
-The command must fail because that exact harmless command is explicitly denied — it's a deliberately harmless example so you can safely prove the deny-list works without risking anything.
+The command must fail because `rm -rf *` is explicitly denied — this is a deliberately destructive-looking example so you can see the deny-list actually stop a dangerous pattern, not just a harmless placeholder. It targets a throwaway test file you created earlier in this module (not anything important), so even in the unlikely case the deny rule failed to trigger, nothing of value would be lost.
 
 ## 6. Understand the controls
 
@@ -215,4 +215,4 @@ The references demonstrate separation of duties: one agent plans and coordinates
 
 > **Windows users:** the reference agents include both `python3` and `py -3` variants for permitted Python commands.
 
-**Checkpoint:** the manual steering file loads on demand; `my-windows-upgrade` validates and is discovered; `/upgrade-agent` converts the workspace agents; the allowed write and `git status` succeed; the denied write and `echo blocked-test` fail.
+**Checkpoint:** the manual steering file loads on demand; `my-windows-upgrade` validates and is discovered; `/upgrade-agent` converts the workspace agents; the allowed write and `git status` succeed; the denied write and `rm -rf` fail.
