@@ -63,34 +63,30 @@ kiro-cli chat --v3
 Ask Kiro to create a custom agent for this upgrade exercise:
 
 ```text
-Create .kiro/agents/my-windows-upgrade.json as a read-only custom agent. Include:
-1. Name: my-windows-upgrade
-2. Role: Windows EC2 clone-upgrade assistant
-3. Behavior: follow all workspace steering, use only measured evidence, call out
+Create .kiro/agents/my-windows-upgrade.md as a V3 agent in Markdown format. Include:
+1. Role: Windows EC2 clone-upgrade assistant
+2. Behavior: follow all workspace steering, use only measured evidence, call out
    anything that's not verified, never recommend in-place source upgrade
-4. Tools: read, grep, glob, and code only (both tools and allowedTools)
-5. Resources: README.md, all steering files, and the inventory
+3. Tools: read only
+4. Resources: README.md, all steering files, and the inventory
+5. Permissions: allow fs_read
 6. Welcome message: says the agent starts in read-only mode
 ```
 
-Review the proposed agent. If you agree, approve the write.
-
-This shows that Kiro can help you scaffold configuration files from a natural-language description — you tell it what the agent should do, and it generates valid JSON with the correct schema.
-
-Then run `/upgrade-agent` in the same session and select the workspace agents. This adds the `permissions` block that V3 requires.
+Review the proposed file. V3 agents use Markdown — your system prompt is the document body, configuration is in YAML frontmatter.
 
 Exit Kiro and validate:
 
 **Windows PowerShell:**
 
 ```powershell
-kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.json
+kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.md
 ```
 
 **Linux/macOS Bash:**
 
 ```bash
-kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.json
+kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.md
 ```
 
 Then confirm discovery:
@@ -124,72 +120,72 @@ You'll see `read` (includes file reading, search, and diagnostics) and `write`. 
 
 This shows that Kiro can help you analyze and reason about your project while respecting the permissions you defined — it reads code, follows the steering rules, and gives answers grounded in repository files.
 
-## 5. Add write and shell tools with restrictions
+## 5. Set up permissions (hard limits)
 
-Exit the custom agent (`/quit`) and start plain Kiro:
+Permissions control what the agent can and cannot do. In V3, they go directly in the agent's YAML frontmatter.
 
-```text
-kiro-cli chat --v3
-```
-
-Ask Kiro to add write and shell capabilities to your agent:
+Ask Kiro to update your agent with write/shell capabilities and permissions:
 
 ```text
-Update .kiro/agents/my-windows-upgrade.json:
-1. Give the agent write and shell capabilities, but require approval before each use
-2. Only allow writing to ./results/participant/ — block .env, .pem, and .kiro/
-3. Only allow running: validate_repo.py, git status, git diff
-4. Block dangerous commands: terminate-instances, delete-stack, rm -rf, Remove-Item -Recurse
+Update .kiro/agents/my-windows-upgrade.md:
+1. Give the agent write and shell capabilities (add to tools)
+2. Add permissions rules:
+   - Allow writing only to results/participant/
+   - Hard deny writing to .env, .pem, and .kiro/
+   - Allow running: validate_repo.py, git status, git diff
+   - Hard deny: terminate-instances, delete-stack, rm -rf
 ```
 
-After Kiro makes the changes, run `/upgrade-agent` to update the permissions block, then exit and validate:
+Three effects control the behavior:
 
-```bash
-kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.json
-```
+| Effect | What happens | Can user override? |
+|---|---|---|
+| `deny` | Hard block — tool call is rejected | No |
+| `ask` | Kiro asks for approval before running | Yes (user must confirm) |
+| `allow` | Runs automatically, no prompt | N/A |
 
-Restart with your agent and run `/tools` to confirm `shell` now appears alongside `read` and `write`.
+Resolution order: **deny > ask > allow**. A deny rule always wins.
+
+Test the hard limit — start your agent:
 
 ```text
 kiro-cli chat --v3 --agent my-windows-upgrade
 ```
 
-Test the allowed path:
-
-```text
-Create results/participant/agent-permission-test.md containing one sentence
-that says this file was created after participant approval.
-```
-
-Kiro writes the file directly because the path matches the allowed write rule (`./results/participant/**`).
-
-Then test the boundary:
+Try:
 
 ```text
 Replace README.md with the text "permission test".
 ```
 
-This should be blocked — README.md is outside the allowed write paths. Permissions control what the agent can do automatically versus what gets denied.
+This is **hard blocked** by the deny rule — it will not proceed even if you say "yes".
 
-This shows that Kiro can help you write files and run commands while staying within the guardrails you set — it asks for approval on sensitive actions and respects path/command restrictions, so you stay in control of what actually changes.
+Then test the allowed path:
 
-## 6. Understand Kiro permissions
+```text
+Create results/participant/agent-permission-test.md containing one sentence
+that says this file was created by the agent within the allowed path.
+```
 
-Kiro agent permissions use three layers:
+This writes directly because `results/participant/` has `effect: allow`.
 
-1. `tools` — what the agent can attempt.
-2. `allowedTools` — what can run automatically without asking.
-3. `toolsSettings` — path, command, and service boundaries for a tool.
+## 6. Understand the permission layers
 
-Approval prompts and agent restrictions are defense in depth. IAM remains authoritative for AWS permissions. Do not use `--trust-all-tools` in this workshop.
+| Layer | What it does |
+|---|---|
+| **Permissions** (deny/ask/allow in agent frontmatter) | Hard control over what tools can do |
+| **Hooks** (preToolUse scripts) | Custom logic that blocks specific patterns |
+| **IAM** | AWS API authorization |
+
+Permissions are the primary enforcement. Hooks add custom logic (Module 05). IAM is the final authority for AWS calls.
 
 ## 7. Compare with the supplied reference agents
 
 Only after creating your own agent, compare it with the workshop's reference agents:
 
-- `.kiro/agents/windows-upgrade.json` (orchestrator — works on both Linux/macOS and Windows)
-- `.kiro/agents/upgrade-reviewer.json` (read-only independent auditor)
-- `.kiro/agents/upgrade-executor.json` (restricted routine executor)
+- `.kiro/agents/windows-upgrade.md` (orchestrator — works on both Linux/macOS and Windows)
+- `.kiro/agents/upgrade-reviewer.md` (read-only independent auditor)
+- `.kiro/agents/upgrade-executor.md` (restricted routine executor)
 
 These three agents follow the best-practice trust boundary model: **orchestrator** (plans, coordinates, delegates), **reviewer** (audits evidence, cannot fix), and **executor** (runs approved tasks, cannot decide). They represent one way to configure a full upgrade agent set — yours doesn't need to match them exactly.
 

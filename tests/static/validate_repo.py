@@ -21,8 +21,8 @@ REQUIRED = [
     "scripts/00_deploy.sh", "scripts/lib/cache_dependency.py", "scripts/check_kiro_prereqs.py", "scripts/01_collect_inventory.py", "scripts/02_analyze_compatibility.py",
     "scripts/03_run_tests.py", "scripts/04_start_upgrade.py", "scripts/05_launch_validation.py",
     "scripts/06_compare_results.py", "scripts/07_app_cutover.py", "scripts/08_cleanup.sh",
-    ".kiro/agents/windows-upgrade.json",
-    ".kiro/agents/upgrade-executor.json", ".kiro/agents/upgrade-reviewer.json",
+    ".kiro/agents/windows-upgrade.md",
+    ".kiro/agents/upgrade-executor.md", ".kiro/agents/upgrade-reviewer.md",
     ".kiro/skills/windows-upgrade/SKILL.md",
     "inventory/assumed-inventory.yaml",
 ]
