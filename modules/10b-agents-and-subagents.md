@@ -206,13 +206,13 @@ This shows that Kiro can help you orchestrate multi-step workflows — your main
 
 ## 7. Compare with the supplied multi-agent design
 
-After your pipeline works, compare it with:
+After your pipeline works, compare it with the reference agents:
 
-- `.kiro/agents/upgrade-planner.json`
-- `.kiro/agents/upgrade-executor.json`
-- `.kiro/agents/upgrade-reviewer.json`
-- `.kiro/agents/windows-upgrade.json`
-- `.kiro/agents/windows-upgrade-windows.json`
+- `.kiro/agents/windows-upgrade.json` — orchestrator with full tools, subagent, and MCP
+- `.kiro/agents/upgrade-executor.json` — restricted to scripts, cheap model, no MCP
+- `.kiro/agents/upgrade-reviewer.json` — read-only auditor, strong model, has MCP
+
+This is the **trust boundary model**: orchestrator plans and coordinates, executor runs approved tasks with minimum permissions, reviewer audits independently without the ability to fix. The orchestrator absorbed the planner role because both need the same strong model and read access — a separate planner adds no trust boundary.
 
 Look for differences in models, tools, MCP access, shell boundaries, resources, and role prompts. The supplied agents are reference implementations you can now evaluate rather than unexplained files.
 

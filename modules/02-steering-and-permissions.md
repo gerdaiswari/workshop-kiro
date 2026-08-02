@@ -213,11 +213,14 @@ Approval prompts and agent restrictions are defense in depth. IAM remains author
 
 Only after creating your own agent, compare it with the workshop's reference agents:
 
-- `.kiro/agents/windows-upgrade.json` (Linux/macOS)
-- `.kiro/agents/windows-upgrade-windows.json` (Windows)
+- `.kiro/agents/windows-upgrade.json` (orchestrator — works on both Linux/macOS and Windows)
+- `.kiro/agents/upgrade-reviewer.json` (read-only independent auditor)
+- `.kiro/agents/upgrade-executor.json` (restricted routine executor)
 
-These reference agents add AWS service boundaries, hooks, MCP, the workshop skill, and subagent support. They represent one way to configure a full upgrade agent — yours doesn't need to match them exactly.
+These three agents follow the best-practice trust boundary model: **orchestrator** (plans, coordinates, delegates), **reviewer** (audits evidence, cannot fix), and **executor** (runs approved tasks, cannot decide). They represent one way to configure a full upgrade agent set — yours doesn't need to match them exactly.
 
 Study what they do differently, then decide which features you want to add to `my-windows-upgrade` in later modules. The reference agents are examples to learn from, not mandatory configurations.
+
+> **Windows users:** The consolidated `windows-upgrade.json` accepts both `python3` and `py -3` commands. You do not need a separate agent file.
 
 **Checkpoint:** you created upgrade-focused steering, created and validated `my-windows-upgrade`, ran it, added restricted write/shell tools, observed an approval prompt, and can explain the difference between `tools`, `allowedTools`, and `toolsSettings`.
