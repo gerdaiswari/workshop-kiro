@@ -36,19 +36,19 @@ Instead, create a manual steering file that captures environment facts for this 
 
 ```text
 Create .kiro/steering/participant-environment.md with manual inclusion. Include:
-1. Source and target Windows versions (2019 to 2025)
-2. Server roles (APP01 is stateless web apps, DATA01 is stateful databases)
-3. Key dependencies (IIS, nginx, Java 17, Node.js 20, SQL Server Express, MySQL, PostgreSQL)
-4. Identity model (SSM-only, no domain join)
-5. Backup strategy (native database backups on DATA01)
-6. Cutover design (APP01 uses ALB target switch; DATA01 is clone-only, not cutover-ready)
-7. Rollback method (re-register source APP01 in target group)
-8. RTO/RPO (lab has no SLA; mark as "define for production")
-9. Maintenance window (lab: anytime; mark as "define for production")
-10. Vendor support status for each dependency on Windows Server 2025
+1. Source OS: Windows Server 2019
+2. Target OS: Windows Server 2025
+3. Servers: APP01 (stateless web), DATA01 (stateful databases)
+4. Upgrade method: AWS SSM clone-upgrade (not in-place)
+5. Cutover: APP01 uses ALB target switch; DATA01 is validation-only
+6. Rollback: re-register source in ALB target group
+7. RTO/RPO: lab has no SLA (mark "define for production")
+8. Maintenance window: lab has none (mark "define for production")
 ```
 
-This gives you a reference for how to describe your own production environment in steering later. Replace the lab values with your real servers, owners, dependencies, and recovery objectives.
+> **Note for your own environment:** You don't need to run Kiro inside your application's source code. Create a separate upgrade workspace with your scripts, evidence, and steering. The steering file captures what you already know about your servers — Kiro uses it as context when helping you plan, not by scanning your production codebase.
+
+This gives you a reference for how to describe your own servers in steering later. Replace the lab values with your real server names, roles, and recovery objectives.
 
 Run `/context show` to confirm that `participant-environment.md` is not loaded (because it's marked manual). When you start the adaptation exercise, load it manually with `/context add participant-environment.md`. Then run `/context show` again to verify it's now loaded.
 
