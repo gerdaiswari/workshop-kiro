@@ -120,9 +120,9 @@ Inside chat, run:
 /tools
 ```
 
-The agent should expose only read-oriented tools. It cannot write files, run shell commands, or call AWS because those tools are not in `tools`.
+You'll see `read` (includes file reading, search, and diagnostics) and `write`. Even though `write` appears in the list, the agent's permissions only allow `fs_read` — any write attempt will be blocked or require approval. Shell and AWS tools are not available.
 
-This shows that Kiro can help you analyze and reason about your project while respecting the boundaries you defined — it reads code, follows the steering rules, and gives answers grounded in repository files rather than guessing.
+This shows that Kiro can help you analyze and reason about your project while respecting the permissions you defined — it reads code, follows the steering rules, and gives answers grounded in repository files.
 
 ## 5. Add write and shell tools with restrictions
 
