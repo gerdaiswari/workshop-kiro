@@ -69,7 +69,7 @@ Create .kiro/agents/my-windows-upgrade.json as a read-only custom agent. Include
 3. Behavior: follow all workspace steering, use only measured evidence, call out
    anything that's not verified, never recommend in-place source upgrade
 4. Tools: read, grep, glob, and code only (both tools and allowedTools)
-5. Resources: README.md, all steering files, and the inventory
+5. Resources: file://README.md, file://.kiro/steering/**/*.md, and file://inventory/assumed-inventory.yaml
 6. Welcome message: says the agent starts in read-only mode
 ```
 
