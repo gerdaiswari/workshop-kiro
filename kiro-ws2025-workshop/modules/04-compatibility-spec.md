@@ -63,4 +63,18 @@ evidence. Return findings only; do not edit files or call AWS.
 
 This is a simple second pass, not a fully isolated specialist. In Module 10B you will create a dedicated reviewer agent with its own model and restricted tools.
 
-**Checkpoint:** no unresolved AWS prerequisite blocker exists, every workload has a test oracle, and stateful cutover remains blocked by design.
+## Transfer to your environment
+
+- **Lab exercise:** the supplied analyzer evaluates known APP01/DATA01 facts and demonstrates why technical eligibility is not the same as production readiness.
+- **Reusable pattern:** evaluate AWS runbook eligibility, Windows compatibility, vendor support, application behavior, data consistency, and cutover readiness as separate decisions with `pass`, `warning`, `unknown`, or `blocker` evidence.
+- **Adapt before reuse:** obtain the exact runtime/driver/plugin matrix, unsupported Windows roles, licensing position, owner decision, business test oracle, and current AWS/vendor documentation for each workload. Extend deterministic rules rather than asking a model to invent a pass.
+
+Adaptation prompt:
+
+```text
+Challenge my real workload's compatibility evidence. Separate AWS eligibility,
+OS support, vendor certification, application test coverage, state consistency,
+and cutover readiness. Keep every unverified fact UNKNOWN.
+```
+
+**Checkpoint:** no unresolved AWS prerequisite blocker exists for the lab, every lab workload has a test oracle, and stateful cutover remains blocked by design.

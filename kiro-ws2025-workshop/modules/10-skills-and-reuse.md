@@ -4,7 +4,9 @@
 
 Create a Kiro skill yourself, attach it to your custom agent, activate it in a real planning task, and understand how a skill differs from steering and an agent prompt.
 
-> **Schedule position:** complete this module while Module 06 upgrades run in their original terminals. Continue to Module 10B afterward.
+> **Workshop navigation:** Module 06 upgrades are running → Module 09 → **Module 10 (you are here)** → Module 10B → return to Module 07 after both upgrades succeed.
+>
+> Complete this module in the third terminal while the original upgrade terminals continue polling.
 
 ## 1. Understand the difference
 
@@ -59,13 +61,13 @@ Review the front matter and procedure before approving the write.
 
 ## 3. Attach the skill to your agent
 
-Ask plain Kiro to add this entry to the `resources` array in `.kiro/agents/my-windows-upgrade.json`:
+Ask plain Kiro to add your own skill to the `resources` array in `.kiro/agents/my-windows-upgrade.json`:
 
 ```json
-"skill://.kiro/skills/**/SKILL.md"
+"skill://.kiro/skills/participant-windows-upgrade/SKILL.md"
 ```
 
-Keep the existing README and steering resources. Validate the agent after the edit.
+Point at your own skill file by name rather than a wildcard, so your intent is explicit. Keep the existing README and steering resources. Validate the agent after the edit.
 
 **Windows PowerShell:**
 
@@ -78,6 +80,8 @@ kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.json
 ```bash
 kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.json
 ```
+
+Your skill and the supplied `windows-upgrade` skill can coexist. They have different folder names, so they never overwrite each other. Kiro may see both skills' short descriptions, but a skill's full content only loads when it is activated, and Kiro uses whichever one your prompt asks for. Two skills are alternatives, not a conflict.
 
 ## 4. Activate the skill
 
@@ -117,13 +121,30 @@ A credible plan should add:
 
 ## 6. Compare with the reference skill
 
-Now compare your skill with:
+Comparing is a read-only study step. You do not merge, overwrite, or delete anything—your `participant-windows-upgrade` skill and the supplied `windows-upgrade` skill stay in separate folders.
+
+Ask your agent to compare them for you:
+
+```text
+Compare .kiro/skills/participant-windows-upgrade/SKILL.md with
+.kiro/skills/windows-upgrade/SKILL.md and its reference notes. List what the
+reference covers that mine does not, and which of those additions are broadly
+reusable versus lab-specific. Do not edit either file.
+```
+
+Or view the difference directly in your terminal:
+
+```text
+git diff --no-index .kiro/skills/participant-windows-upgrade/SKILL.md .kiro/skills/windows-upgrade/SKILL.md
+```
+
+The reference is longer because it adds mandatory outputs and reusable compatibility notes:
 
 - `.kiro/skills/windows-upgrade/SKILL.md`
 - `.kiro/skills/windows-upgrade/references/app-matrix.md`
 - `.kiro/skills/windows-upgrade/references/known-issues.md`
 
-The reference version is longer because it includes mandatory outputs and reusable compatibility references. Improve your skill only when a rule is broadly reusable; keep workload-specific facts in inventory or steering.
+Improve your own skill only when a rule is broadly reusable. Keep workload-specific facts in inventory or steering, not in the skill.
 
 ## 7. Kiro limitation exercise
 
@@ -138,3 +159,7 @@ whether it is ready to upgrade.
 The correct response should identify blockers and propose discovery/architecture work—not claim autonomous success.
 
 **Checkpoint:** you created a valid skill with front matter, attached it through `resources`, activated it, used it for fleet planning, and can explain how skills differ from steering and agent prompts.
+
+## Further reading
+
+For guidance on reusing this workshop's approach in production, see the [Kiro context and reuse guide](../docs/kiro-context-and-reuse.md).

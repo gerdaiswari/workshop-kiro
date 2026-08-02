@@ -15,7 +15,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = [
-    "README.md", "infra/lab.yaml", "bootstrap/app01.ps1", "bootstrap/data01.ps1",
+    "README.md", "docs/kiro-context-and-reuse.md", "infra/lab.yaml",
+    "bootstrap/app01.ps1", "bootstrap/data01.ps1",
     "apps/app01/angular/dist/workshop-angular/index.html",
     "scripts/00_deploy.sh", "scripts/lib/cache_dependency.py", "scripts/check_kiro_prereqs.py", "scripts/01_collect_inventory.py", "scripts/02_analyze_compatibility.py",
     "scripts/03_run_tests.py", "scripts/04_start_upgrade.py", "scripts/05_launch_validation.py",
@@ -29,6 +30,19 @@ REQUIRED = [
 VALID_HOOK_TRIGGERS = {
     "agentSpawn", "userPromptSubmit", "preToolUse", "postToolUse", "stop",
 }
+STEERING_INCLUSION = {
+    ".kiro/steering/safety-rules.md": "always",
+    ".kiro/steering/project.md": "manual",
+    ".kiro/steering/aws-conventions.md": "manual",
+}
+TRANSFER_MODULES = [
+    "modules/03-inventory-spec.md",
+    "modules/04-compatibility-spec.md",
+    "modules/05-hooks-and-safety.md",
+    "modules/06-clone-upgrade-spec.md",
+    "modules/07-validation-spec.md",
+    "modules/08-cutover-rollback-spec.md",
+]
 
 
 def main() -> int:
@@ -40,6 +54,21 @@ def main() -> int:
     for relative in REQUIRED:
         if not (ROOT / relative).is_file():
             errors.append(f"missing required file: {relative}")
+
+    for relative, expected in STEERING_INCLUSION.items():
+        path = ROOT / relative
+        text = path.read_text(encoding="utf-8") if path.is_file() else ""
+        if not re.search(rf"^---\s*\ninclusion:\s*{expected}\s*\n---", text):
+            errors.append(f"{relative} must declare inclusion: {expected}")
+
+    safety_text = (ROOT / ".kiro/steering/safety-rules.md").read_text(encoding="utf-8")
+    if "APP01" in safety_text or "DATA01" in safety_text:
+        errors.append("always-loaded safety steering must not contain lab server names")
+
+    for relative in TRANSFER_MODULES:
+        path = ROOT / relative
+        if path.is_file() and "## Transfer to your environment" not in path.read_text(encoding="utf-8"):
+            errors.append(f"workflow module missing transfer guidance: {relative}")
 
     for path in ROOT.rglob("*.json"):
         if "results" in path.parts:

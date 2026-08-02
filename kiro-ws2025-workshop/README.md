@@ -26,11 +26,13 @@ Both start from the AWS Windows Server 2019 English Full Base AMI on Nitro-based
 - **Code intelligence and subagents:** inspect scripts/apps and obtain independent reviews.
 - **Tool trust:** agent `allowedTools`, tool restrictions, approval prompts, and supported hooks.
 
+
+
 ## Safety boundaries
 
 1. `AWSEC2-CloneInstanceAndUpgradeWindows` creates an AMI, upgrades a temporary instance, outputs an upgraded AMI, and terminates the temporary instance. It does not make the source instance Windows Server 2025.
 2. The runbook can take about two hours **per server** and creates billable resources.
-3. Source instances are not rebooted by this workshop (`RebootInstanceBeforeTakingImage=False`), but AMI creation still performs storage snapshots. Native database backups are taken first.
+3. Source instances are not rebooted by this workshop (`RebootInstanceBeforeTakingImage=False`), but AMI creation still performs storage snapshots. The workshop takes database backups before starting the upgrade.
 4. DATA01's upgraded AMI captures the server state at clone time. It's a compatibility check, not a production cutover solution. Real cutover requires syncing data (replication) or stopping writes, taking a final backup, and restoring to the new server.
 5. APP01 is the only server with a simulated ALB cutover. You must wait for health checks to pass and the application to fully recover. Note: rollback takes time; it's not instant.
 6. The lab doesn't include domain controllers, failover clusters, Remote Desktop roles (RDSH, RDCB, RDVH, RDWA), or BYOL media.
@@ -50,7 +52,7 @@ Before starting, review the lab infrastructure and application design:
 
 ## Workshop path
 
-This is a facilitator-led, hands-on workshop. Modules 00–01 and the plain-Kiro introduction are completed first. During the long-running upgrade, participants continue with read-only/low-risk Kiro feature modules, then return to validation and cutover once both upgrades finish.
+This is a facilitator-led, hands-on workshop. Follow the modules in order. Each module tells you exactly what to do.
 
 | Module | Topic | Duration |
 |---|---|---:|
@@ -60,15 +62,15 @@ This is a facilitator-led, hands-on workshop. Modules 00–01 and the plain-Kiro
 | [03](modules/03-inventory-spec.md) | Inventory through SSM and Kiro Spec | 15 min |
 | [04](modules/04-compatibility-spec.md) | Compatibility analysis and evidence challenge | 10 min |
 | [05](modules/05-hooks-and-safety.md) | Create hooks, capture baselines and native backups | 10 min |
-| [06](modules/06-clone-upgrade-spec.md) | Start APP01 and DATA01 clone-upgrades in separate terminals | 5 min to start, then wait for both runbooks to finish |
-| [09](modules/09-mcp-integration.md) | Add and use AWS Knowledge MCP while upgrades run | 20 min |
-| [10](modules/10-skills-and-reuse.md) | Create a reusable skill and fleet plan while upgrades run | 20 min |
-| [10B](modules/10b-agents-and-subagents.md) | Create specialized agents, models, and subagents while upgrades run | 25 min |
+| [06](modules/06-clone-upgrade-spec.md) | Start APP01 and DATA01 clone-upgrades | 5 min to start, ~2 hours to finish |
 | [07](modules/07-validation-spec.md) | Launch Windows Server 2025 copies and run post-upgrade tests | 20 min |
 | [08](modules/08-cutover-rollback-spec.md) | Cutover/rollback simulation; DATA01 compatibility boundary | 15 min |
+| [09](modules/09-mcp-integration.md) | Add and use AWS Knowledge MCP | 20 min |
+| [10](modules/10-skills-and-reuse.md) | Create a reusable skill and fleet plan | 20 min |
+| [10B](modules/10b-agents-and-subagents.md) | Create specialized agents, models, and subagents | 25 min |
 | [11](modules/11-cleanup.md) | Remove all billable resources | 10 min |
 
-Upgrade duration is controlled by AWS Systems Manager and Windows Update and can vary. Modules 09, 10, and 10B are designed to fill that wait; do not skip success checks in Module 07 merely to keep to a schedule.
+Upgrade duration is controlled by AWS Systems Manager and Windows Update and can vary. Modules 09, 10, and 10B are designed to fill that wait.
 
 ## Cost estimation
 

@@ -58,7 +58,7 @@ Both source instances must be `Online`. There is no RDP ingress; use Session Man
 
 ## Explore the applications with plain Kiro
 
-Start with Kiro's default Vibe mode from the repository root—do not select a custom agent yet:
+Start with Kiro's default Vibe mode from the repository root. Module 02 introduces custom agents; for now, use the built-in agent so you can observe the baseline experience:
 
 ```text
 kiro-cli chat --v3

@@ -104,4 +104,18 @@ A failure is evidence, not permission to modify the source blindly. Start a norm
 kiro-cli chat --v3 --agent my-windows-upgrade
 ```
 
-**Checkpoint:** successful execution evidence contains an upgraded AMI ID for each server, and both source instances remain healthy on Windows Server 2019.
+## Transfer to your environment
+
+- **Lab exercise:** two named servers use recorded stack outputs and a known runbook parameter set; each execution requires typed confirmation and saves AMI/execution evidence.
+- **Reusable pattern:** verify the installed automation document schema, prerequisites, backup state, rollback artifacts, quota/cost, stop conditions, and explicit approval before each change. Treat the operation as clone upgrade, not an in-place production upgrade.
+- **Adapt before reuse:** discover instance profile, subnet, source/target support, edition/language, unsupported roles, free space, egress, KMS/IAM needs, concurrency, maintenance window, and state-consistency design. Never copy a parameter that the current runbook schema does not expose.
+
+Adaptation prompt:
+
+```text
+Prepare a change proposal for one real server from measured evidence. Show the
+exact current runbook schema, inputs, resource IDs, prerequisites, duration,
+cost, rollback artifacts, stop conditions, and approval boundary. Do not execute.
+```
+
+**Checkpoint:** successful lab execution evidence contains an upgraded AMI ID for each server, and both source instances remain healthy on Windows Server 2019.

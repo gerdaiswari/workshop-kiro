@@ -109,4 +109,18 @@ python3 scripts/03_run_tests.py --phase post \
 python3 scripts/06_compare_results.py
 ```
 
-**Checkpoint:** the test suite detects the controlled failure, evidence identifies the stopped service, the repair restores it, and the final comparison passes.
+## Transfer to your environment
+
+- **Lab exercise:** launch isolated validation copies, compare known service/API/database checks, stop one validation-only service, prove red, repair, and prove green.
+- **Reusable pattern:** validate the target OS and management plane, service recovery, business behavior, data integrity, dependencies, observability, and rollback evidence. A controlled failure demonstrates that tests can detect a regression instead of producing false confidence.
+- **Adapt before reuse:** create workload-owned functional, authentication, scheduled-job, integration, performance, security, backup/restore, and reconciliation tests. Define which differences are expected and who can accept warnings. Never inject failures into a source or production target.
+
+Adaptation prompt:
+
+```text
+Design an isolated post-upgrade test pack for my workload. Map every requirement
+to objective evidence, include one safe failure proving the test can turn red,
+and define which failures block promotion.
+```
+
+**Checkpoint:** the lab suite detects the controlled failure, evidence identifies the stopped service, the repair restores it, and the final comparison passes.

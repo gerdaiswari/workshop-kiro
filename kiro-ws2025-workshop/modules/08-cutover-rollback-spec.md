@@ -72,4 +72,18 @@ Ask it to compare:
 
 Require RTO/RPO, identity, sessions, file state, dependencies, observation periods, and rollback ownership in each design. This is an architecture discussion; do not call AWS or change the lab.
 
+## Transfer to your environment
+
+- **Lab exercise:** APP01 demonstrates health-gated ALB target switching and reversal; DATA01 intentionally demonstrates why a live stateful clone is not cutover-ready.
+- **Reusable pattern:** choose cutover architecture from workload state, identity, sessions, dependencies, RTO/RPO, observation time, and rollback ownership. Register/validate before removing the old path when the architecture supports it.
+- **Adapt before reuse:** design separately for stateless fleets, singleton servers, databases, domain/identity-sensitive workloads, file state, queues, scheduled jobs, and external consumers. For stateful systems, add replication or write freeze plus final backup/restore and reconciliation. Measure rollback; never describe it as instant.
+
+Adaptation prompt:
+
+```text
+Classify my workload and produce a cutover/rollback design with prerequisites,
+health gates, data synchronization, observation period, RTO/RPO, owners, stop
+conditions, and commands to be reviewed. Do not execute or assume it is stateless.
+```
+
 **Checkpoint:** APP01 transition and rollback have audit evidence, and no DATA01 target was changed.

@@ -4,7 +4,9 @@
 
 Create your own reviewer and executor agents, assign models that are actually available to your account, validate their schemas, and let your main agent delegate a read-only review through subagents.
 
-> **Schedule position:** this is the final learning activity during the Module 06 upgrade wait. When finished, check both upgrade terminals. Continue to Module 07 only after both report `Success` and produce upgraded AMI IDs.
+> **Workshop navigation:** Module 06 upgrades are running → Module 09 → Module 10 → **Module 10B (you are here)** → return to Module 07 only after both upgrades succeed.
+>
+> This is the final learning activity during the upgrade wait. When finished, check both upgrade terminals; Module 07 requires `Success` and upgraded AMI IDs for both servers.
 
 ## 1. Discover models before configuring them
 

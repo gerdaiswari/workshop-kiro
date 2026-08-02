@@ -29,28 +29,7 @@ Git is only needed if you clone the repository. If you received the workshop as 
 
 The executable is **`kiro-cli`**, not `kiro`.
 
-## 3. Two ways to work: Vibe mode and Spec mode
-
-Kiro has two modes you'll use in this workshop:
-
-| Mode | What it does | When to use |
-|---|---|---|
-| **Vibe** (default) | You chat freely, Kiro executes tasks directly | Running scripts, exploring, asking questions, fixing issues |
-| **Spec** | Kiro creates a structured plan (requirements → design → tasks) before acting | Planning upgrades, designing test strategies, defining change scope |
-
-Start Vibe mode:
-
-```text
-kiro-cli chat --v3
-```
-
-Start Spec mode:
-
-```text
-kiro-cli chat --v3 --mode spec
-```
-
-## 4. Open the repository
+## 3. Open the repository
 
 **Windows PowerShell:**
 
@@ -64,9 +43,15 @@ cd C:\path\to\kiro-ws2025-workshop
 cd /path/to/kiro-ws2025-workshop
 ```
 
-All later Kiro commands must be run from this directory so Kiro can discover `.kiro/agents/`, steering files, skills, and the MCP servers attached to workspace agents.
+All later Kiro commands must be run from this directory.
 
-## 5. Run the Kiro preflight
+Start a short session to confirm Kiro is working:
+
+```text
+kiro-cli chat --v3
+```
+
+## 4. Run the Kiro preflight
 
 The preflight checks the Kiro version, v3 and Spec options, every custom-agent schema, and whether configured model IDs are available to your account.
 
@@ -90,7 +75,7 @@ Kiro workshop preflight passed
 
 If it fails, follow the printed error before continuing. Available models can differ by account or change over time; the preflight detects that condition instead of silently using an unexpected model.
 
-## 6. Set AWS credentials
+## 5. Set AWS credentials
 
 Your lab or Workshop Studio provides temporary credentials as environment variables. Copy them from the **AWS account access** panel into your terminal.
 
@@ -123,7 +108,7 @@ set AWS_SESSION_TOKEN=<from lab>
 
 These variables are valid for your current terminal session only. If you open a new terminal, paste them again.
 
-## 7. Verify AWS identity
+## 6. Verify AWS identity
 
 ```text
 aws sts get-caller-identity
@@ -141,7 +126,7 @@ Expected output (values will differ):
 
 Confirm the account number matches your lab/sandbox account. Do not continue if it shows a production account.
 
-## 8. Confirm the AWS regional prerequisites
+## 7. Confirm the AWS regional prerequisites
 
 ### Check 1: Upgrade runbook exists
 
@@ -207,13 +192,13 @@ Expected output:
 
 If either check fails, the region may not support the upgrade runbook or the Windows Server 2019 AMI. Contact your instructor.
 
-## 9. AWS permissions
+## 8. AWS permissions
 
 The deployer needs permissions for CloudFormation, EC2, IAM, S3, Elastic Load Balancing v2, and Systems Manager. The identity that starts `AWSEC2-CloneInstanceAndUpgradeWindows` also needs its documented image, temporary-instance, volume, tagging, and instance-profile permissions.
 
 Use a dedicated sandbox account. Kiro tool approval is an additional safety control; it does not replace IAM.
 
-## 10. Cost estimation
+## 9. Cost estimation
 
 Budget approximately USD 15–35 for a complete run, depending on runtime and current regional prices. Each clone-upgrade can take about two hours and creates billable temporary resources. Delete lab resources when you stop the workshop.
 

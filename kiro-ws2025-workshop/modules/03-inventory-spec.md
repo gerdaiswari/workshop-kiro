@@ -95,4 +95,18 @@ roles, and missing test oracles. Do not modify either file and do not call AWS.
 
 Program and service discovery is evidence, not proof of ownership or vendor support. Unknowns remain unknown until an application owner resolves them.
 
-**Checkpoint:** both servers were collected successfully; services and ports match the lab; no secret values are present; and the participant can explain how Spec mode differs from script execution.
+## Transfer to your environment
+
+- **Lab exercise:** `01_collect_inventory.py` knows the workshop stack, two server roles, and where to save normalized evidence.
+- **Reusable pattern:** define inventory requirements and acceptance criteria first; collect measured OS, role, service, dependency, identity, storage, and network facts; preserve per-server errors; keep secrets out; treat assumptions as unverified.
+- **Adapt before reuse:** replace APP01/DATA01 and stack discovery with your CMDB, tags, account/region scope, owner questionnaire, approved remote-access method, evidence schema, retention policy, and redaction rules.
+
+Adaptation prompt:
+
+```text
+Using my manual participant environment profile, draft inventory acceptance
+criteria for one real server. Keep missing owners, dependencies, RTO/RPO,
+vendor support, and test oracles as UNKNOWN. Do not reuse lab ports or services.
+```
+
+**Checkpoint:** both lab servers were collected successfully; services and ports match the lab; no secret values are present; and the participant can explain how Spec mode differs from script execution.

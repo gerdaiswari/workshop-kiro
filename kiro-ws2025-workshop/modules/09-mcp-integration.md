@@ -4,7 +4,9 @@
 
 Configure an MCP server yourself, expose its tools to the agent you created, verify discovery, and use it for current AWS documentation without calling your AWS account APIs.
 
-> **Schedule position:** complete this module while the two Module 06 upgrade terminals continue polling. Do not stop or reuse those terminals. Continue to Module 10 afterward.
+> **Workshop navigation:** Module 06 upgrades are running → **Module 09 (you are here)** → Module 10 → Module 10B → return to Module 07 after both upgrades succeed.
+>
+> Complete this module in a third terminal while the two Module 06 upgrade terminals continue polling. Do not stop or reuse those terminals.
 
 ## 1. Understand why MCP is needed
 

@@ -239,4 +239,18 @@ python3 scripts/03_run_tests.py \
 
 Backups remain on DATA01 for this synthetic lab. Production backups require controlled storage and an independently tested restore.
 
+## Transfer to your environment
+
+- **Lab exercise:** a small regex hook blocks selected commands; supplied scripts capture synthetic endpoint/database baselines and local native backups.
+- **Reusable pattern:** combine least-privilege IAM, restricted tools, human approval, hooks, deterministic tests, native backups, and tested restore procedures. A hook is defense in depth, not a security boundary by itself.
+- **Adapt before reuse:** build business/API/data assertions for each application, review every destructive command family, store backups in approved protected storage, test restore independently, and define retention plus recovery ownership from RTO/RPO.
+
+Adaptation prompt:
+
+```text
+Review my planned safety controls and baseline tests. Identify what is enforced
+by IAM, agent permissions, hooks, scripts, human approval, and recovery testing.
+Find gaps; do not assume the lab regex or test pack covers my workload.
+```
+
 **Checkpoint:** you created and tested a hook script, attached both supported hooks to your own agent, validated the agent, saw `/hooks`, and captured passing APP01/DATA01 baseline and native-backup evidence.
