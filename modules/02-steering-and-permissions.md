@@ -32,7 +32,7 @@ Steering gives Kiro durable instructions and context. Choose its scope based on 
 
 Run `/context show`. The supplied `.kiro/steering/safety-rules.md` is the always-loaded example. Do not create another copy of the same safety rules: duplication consumes context and can drift.
 
-Instead, create a manual steering file that captures environment facts for this Windows upgrade lab:
+Instead, ask Kiro to create a manual steering file that captures environment facts for this Windows upgrade:
 
 ```text
 Create .kiro/steering/participant-environment.md with manual inclusion. Include:
@@ -42,17 +42,15 @@ Create .kiro/steering/participant-environment.md with manual inclusion. Include:
 4. Upgrade method: AWS SSM clone-upgrade (not in-place)
 5. Cutover: APP01 uses ALB target switch; DATA01 is validation-only
 6. Rollback: re-register source in ALB target group
-7. RTO/RPO: lab has no SLA (mark "define for production")
-8. Maintenance window: lab has none (mark "define for production")
+7. RTO: 4 hours
+8. RPO: 1 hour
 ```
 
-> **Note for your own environment:** You don't need to run Kiro inside your application's source code. Create a separate upgrade workspace with your scripts, evidence, and steering. The steering file captures what you already know about your servers — Kiro uses it as context when helping you plan, not by scanning your production codebase.
-
-This gives you a reference for how to describe your own servers in steering later. Replace the lab values with your real server names, roles, and recovery objectives.
+This gives you a reference for how to describe your own servers in steering later. Replace the values with your real server names, roles, and recovery objectives.
 
 Run `/context show` to confirm that `participant-environment.md` is not loaded (because it's marked manual). When you start the adaptation exercise, load it manually with `/context add participant-environment.md`. Then run `/context show` again to verify it's now loaded.
 
-**What you learned:** Kiro can help you create structured documentation with the right format and placeholders — you describe what you need, and it generates the file. Steering controls *when* Kiro loads that context: `always` means safety rules are enforced in every conversation; `manual` means environment-specific facts are only loaded when relevant, saving context budget for the actual task.
+**What you learned:** Kiro can help you create structured documentation — you describe what you need, and it generates the file with the right format.
 
 ## 3. Create a minimal read-only agent
 
