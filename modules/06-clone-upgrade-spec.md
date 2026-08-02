@@ -9,6 +9,36 @@ This is the module where the actual Windows Server upgrade happens — but notic
 
 > **Entry gate:** complete Module 05 first. `results/tests/baseline/summary.json` must show `passed: true`; before starting DATA01, `results/backups/summary.json` must also show `passed: true`. `04_start_upgrade.py` checks these files but does not create them — if you skipped Module 05, come back and run its baseline and backup steps first.
 
+## Before opening the upgrade terminals
+
+AWS credentials exported as environment variables apply only to the terminal where you exported them. Terminal 2 and Terminal 3 do **not** inherit credentials from Terminal 1. In every new terminal, first open the repository, export the latest temporary credentials from the workshop's **AWS account access** panel, and verify the AWS identity before running any workshop command.
+
+**Linux/macOS Bash:**
+
+```bash
+cd /path/to/kiro-ws2025-workshop
+export AWS_DEFAULT_REGION="us-east-1"
+export AWS_ACCESS_KEY_ID="<from lab>"
+export AWS_SECRET_ACCESS_KEY="<from lab>"
+export AWS_SESSION_TOKEN="<from lab>"
+aws sts get-caller-identity --region us-east-1
+```
+
+**Windows PowerShell:**
+
+```powershell
+cd C:\path\to\kiro-ws2025-workshop
+$env:AWS_DEFAULT_REGION="us-east-1"
+$env:AWS_ACCESS_KEY_ID="<from lab>"
+$env:AWS_SECRET_ACCESS_KEY="<from lab>"
+$env:AWS_SESSION_TOKEN="<from lab>"
+aws sts get-caller-identity --region us-east-1
+```
+
+Confirm that `get-caller-identity` shows the intended workshop/sandbox account. Do not continue if it fails or shows a production account. Never paste credential values into Kiro chat, workshop files, or Git.
+
+If `04_start_upgrade.py` reports `ExpiredToken` while calling `cloudformation describe-stacks`, the script failed before the confirmation prompt and no upgrade was started. Export fresh credentials in that terminal, verify the identity again, and rerun the command. If the terminal has already displayed an Automation execution ID and status, the AWS automation is already running; do not start a duplicate execution. Export fresh credentials and inspect the existing execution as described in step 4.
+
 ## 1. Review the change in Spec mode
 
 Start Spec mode with the agent you created:
@@ -32,6 +62,8 @@ Do not run upgrade tasks unattended or with `--trust-all-tools` — this is exac
 This shows that Kiro can help you prepare for a high-impact change — it reads your infrastructure code and evidence files, then summarizes exactly what will happen, what it will cost, how long it takes, and what the rollback looks like, so you make an informed decision before typing "yes".
 
 ## 2. Start APP01 in terminal 1
+
+In Terminal 1, complete the credential export and `get-caller-identity` verification above, then start APP01.
 
 **Windows PowerShell:**
 
@@ -66,7 +98,7 @@ RebootInstanceBeforeTakingImage=False
 
 ## 3. Start DATA01 in terminal 2
 
-Open a **separate terminal** in the repository root — this is the second of the two concurrent upgrade terminals mentioned above. Start DATA01 only after its baseline and native-backup evidence pass. It does not need to wait for APP01 to finish because the two executions target different source instances and write separate evidence files, so they run fully independently of each other.
+Open a **separate terminal** in the repository root — this is the second of the two concurrent upgrade terminals mentioned above. Export the latest AWS credentials in Terminal 2 and run `aws sts get-caller-identity` again; credentials from Terminal 1 are not available here. Start DATA01 only after the identity is correct and its baseline and native-backup evidence pass. It does not need to wait for APP01 to finish because the two executions target different source instances and write separate evidence files, so they run fully independently of each other.
 
 **Windows PowerShell:**
 
@@ -90,7 +122,7 @@ Type `DATA01` when prompted and keep this terminal open. Running both automation
 
 ### Continue learning while the upgrades run
 
-After both terminals show an automation execution ID/status, take the scheduled break and then continue in a third terminal:
+After both terminals show an automation execution ID/status, take the scheduled break and then continue in a third terminal. Before using Terminal 3, open the repository there, export the latest AWS credentials again, and verify `aws sts get-caller-identity` as described above. Then continue with:
 
 1. [Module 09](09-mcp-integration.md) — add AWS Knowledge MCP.
 2. [Module 10](10-skills-and-reuse.md) — create a reusable skill.
