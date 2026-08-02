@@ -6,7 +6,7 @@ Create a Kiro skill yourself, attach it to your custom agent, activate it in a r
 
 ## Why this matters
 
-By now you've used three different ways to give Kiro persistent knowledge: steering (Module 02, durable project facts and rules), an agent prompt (Module 02, one agent's role and behavior), and now a skill — a reusable, step-by-step procedure that Kiro loads only when it's relevant to the task at hand. The distinction matters because each is meant for different content: steering holds facts about *this* project, an agent prompt defines *one agent's* personality and boundaries, and a skill holds a *portable* workflow you could copy into a completely different repository and it would still make sense. You'll build a skill that encodes the Windows-upgrade procedure itself, then use it to scale this workshop's two-server exercise into a rollout plan for 40 servers.
+By now you've used three different ways to give Kiro persistent knowledge: steering (Module 02, durable project facts and rules), an agent prompt (Module 02, one agent's role and behavior), and now a skill — a reusable, step-by-step procedure that Kiro loads only when it's relevant to the task at hand. The distinction matters because each is meant for different content: steering holds facts about *this* project, an agent prompt defines *one agent's* personality and boundaries, and a skill holds a *portable* workflow you could copy into a completely different repository and it would still make sense. You'll build a skill that encodes the Windows-upgrade procedure itself, then use it to scale this workshop's two-server exercise into a rollout plan for a larger server fleet.
 
 > **Workshop navigation:** Module 06 upgrades are running → Module 09 → **Module 10 (you are here)** → Module 10B → return to Module 07 after both upgrades succeed.
 >
@@ -99,8 +99,9 @@ Ask — notice the prompt explicitly says "Activate," which tells Kiro to load t
 
 ```text
 Activate the participant-windows-upgrade skill. Convert this two-server evidence
-model into a rollout plan for 40 servers without assuming they match the lab.
-Show which parts of the answer came from the skill and which require new discovery.
+model into a phased rollout plan for a larger server fleet without assuming the
+servers match the lab. Show which parts of the answer came from the skill and
+which require new discovery.
 ```
 
 A credible plan should add:
