@@ -148,7 +148,7 @@ After Kiro makes the changes, run `/upgrade-agent` to update the permissions blo
 kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.json
 ```
 
-Restart with your agent and run `/tools` to confirm write and shell now appear.
+Restart with your agent and run `/tools` to confirm `shell` now appears alongside `read` and `write`.
 
 ```text
 kiro-cli chat --v3 --agent my-windows-upgrade
