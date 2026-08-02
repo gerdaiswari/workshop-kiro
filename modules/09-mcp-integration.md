@@ -24,11 +24,12 @@ Start plain Kiro:
 kiro-cli chat --v3
 ```
 
-Ask Kiro to update `.kiro/agents/my-windows-upgrade.json` with these three changes:
+Ask Kiro to update `.kiro/agents/my-windows-upgrade.json` with these four changes:
 
 1. Add `"@aws-knowledge-mcp-server/*"` to `tools`.
 2. Add `"@aws-knowledge-mcp-server/*"` to `allowedTools` because this server is read-only documentation access.
-3. Add this top-level object:
+3. Add a V3 permission rule with capability `mcp`, effect `allow`, and match `aws-knowledge-mcp-server/*`.
+4. Add this top-level object:
 
 ```json
 "mcpServers": {

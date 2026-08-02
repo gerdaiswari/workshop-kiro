@@ -3,6 +3,8 @@
 ## Learning objective
 Review the high-impact change in Kiro Spec mode, then start the AWS-owned clone-upgrade automation separately for APP01 and DATA01 with explicit confirmation.
 
+> **Entry gate:** complete Module 05 first. `results/tests/baseline/summary.json` must show `passed: true`; before starting DATA01, `results/backups/summary.json` must also show `passed: true`. `04_start_upgrade.py` checks these files but does not create them.
+
 ## 1. Review the change in Spec mode
 
 Start Spec mode with the agent you created:

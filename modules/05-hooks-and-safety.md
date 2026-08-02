@@ -181,19 +181,17 @@ Inside chat:
 /hooks
 ```
 
-Confirm both hooks are listed. Ask the agent to update `results/participant/agent-permission-test.md`. Review and approve the write; the quick validator should run afterward.
+Confirm both hooks are listed. Ask the agent to update `results/participant/agent-permission-test.md`. The path is allowed, so the write may run without another prompt; the quick validator should run afterward. Review the displayed path and diff before continuing.
 
 Do not test a real termination request. The direct fake-input test above proves blocking behavior without creating an AWS API call.
 
 ## 6. Compare with the reference hook
 
-Compare your implementation with:
+Compare your script with `scripts/hooks/block_destructive.py`. Identify differences in JSON error handling, command coverage, and messages.
 
-- `scripts/hooks/block_destructive.py`
-- `.kiro/agents/windows-upgrade.json`
-- `.kiro/agents/windows-upgrade-windows.json`
+The reference agents intentionally do not embed one hook command because the Python launcher differs by workstation (`python3` on Linux/macOS and `py -3` on Windows). Your participant agent uses the workstation-specific hook configuration from step 4.
 
-Identify differences in error handling, command coverage, timeouts, and workstation launchers. Hooks are defense in depth; they do not replace IAM or human approval.
+Hooks are defense in depth; they do not replace IAM or human approval.
 
 ## 7. Capture baseline tests
 

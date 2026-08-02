@@ -34,6 +34,10 @@
         "python3 scripts/01_collect_inventory.py*",
         "python3 scripts/03_run_tests.py*",
         "python3 scripts/06_compare_results.py*",
+        "py -3 tests/static/validate_repo.py*",
+        "py -3 scripts/01_collect_inventory.py*",
+        "py -3 scripts/03_run_tests.py*",
+        "py -3 scripts/06_compare_results.py*",
         "aws sts get-caller-identity*",
         "aws cloudformation describe-*",
         "aws ec2 describe-*",
@@ -45,7 +49,8 @@
       "deniedCommands": [
         "aws ec2 terminate-instances*",
         "aws cloudformation delete-stack*",
-        "rm -rf *"
+        "rm -rf *",
+        "Remove-Item * -Recurse*"
       ],
       "autoAllowReadonly": true,
       "denyByDefault": false

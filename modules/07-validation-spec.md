@@ -71,8 +71,6 @@ python3 scripts/03_run_tests.py --phase post \
 
 The Next.js checks should now fail.
 
-Start Kiro:
-
 Start the agent you created:
 
 ```text

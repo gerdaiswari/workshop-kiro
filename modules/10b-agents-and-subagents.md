@@ -49,14 +49,12 @@ Ask it to create `.kiro/agents/participant-reviewer.json` with the following con
     "read",
     "grep",
     "glob",
-    "code",
     "@aws-knowledge-mcp-server/*"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
-    "code",
     "@aws-knowledge-mcp-server/*"
   ],
   "mcpServers": {
@@ -142,6 +140,14 @@ kiro-cli agent list
 
 If validation reports an unavailable model, return to `--list-models`, use an exact ID, and validate again.
 
+The two files were created with V2 portability fields. Convert only the newly listed V2 workspace agents before testing their V3 tool boundaries:
+
+```text
+kiro-cli chat --v3
+```
+
+Run `/upgrade-agent`, select **V2 Workspace**, and confirm the listed agents are `participant-reviewer` and `participant-executor`. Exit and validate both files again.
+
 ## 5. Use each specialized agent directly
 
 Start the reviewer:
@@ -183,7 +189,13 @@ Enable Kiro's documented subagent setting:
 kiro-cli settings chat.enableSubagent true
 ```
 
-Use plain Kiro to add `"subagent"` to the `tools` array in `.kiro/agents/my-windows-upgrade.json`. Do not add it to `allowedTools`; review delegation requests before approval.
+Use plain Kiro to update `.kiro/agents/my-windows-upgrade.json`:
+
+1. Add `"subagent"` to `tools`.
+2. Do not add it to `allowedTools`.
+3. Add a V3 permission rule with capability `subagent` and effect `ask`.
+
+This makes every delegation request visible for participant approval.
 
 Validate `my-windows-upgrade.json` again, then restart it:
 
@@ -212,7 +224,7 @@ After your pipeline works, compare it with the reference agents:
 - `.kiro/agents/upgrade-executor.json` — restricted to scripts, cheap model, no MCP
 - `.kiro/agents/upgrade-reviewer.json` — read-only auditor, strong model, has MCP
 
-This is the **trust boundary model**: orchestrator plans and coordinates, executor runs approved tasks with minimum permissions, reviewer audits independently without the ability to fix. The orchestrator absorbed the planner role because both need the same strong model and read access — a separate planner adds no trust boundary.
+This is the **trust boundary model**: the orchestrator plans and coordinates, the executor runs approved tasks with minimum permissions, and the reviewer audits independently without the ability to fix. The orchestrator absorbs planning because a separate planner would not add another trust boundary; it uses the account's selected/default model unless you explicitly add a `model` field.
 
 Look for differences in models, tools, MCP access, shell boundaries, resources, and role prompts. The supplied agents are reference implementations you can now evaluate rather than unexplained files.
 

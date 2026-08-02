@@ -2,11 +2,11 @@
 
 ## Learning objective
 
-Create Kiro workspace steering and a custom agent yourself. Decide which tools it can use, which are trusted, and where it can save files. The workshop provides example agents to learn from — you can create your own.
+Create workspace steering and a restricted custom agent, convert the agent once for Kiro CLI V3, and verify its allowed and denied operations with harmless tests.
 
 ## 1. Start a chat with Kiro
 
-From the repository root, start Vibe mode without `--agent`:
+From the repository root:
 
 ```text
 kiro-cli chat --v3
@@ -19,60 +19,82 @@ What Kiro workspace configuration folders exist in this repository, and what is
 the purpose of steering, agents, skills, hooks, and MCP?
 ```
 
-This shows that Kiro can read your project files, follow code relationships, and explain your architecture — without you having to configure anything first.
+This shows that Kiro can inspect project files and explain how the workspace is organized.
 
 ## 2. Create steering
 
-Steering gives Kiro durable instructions and context. Choose its scope based on where the instructions should apply:
+Steering gives Kiro durable instructions and context:
 
-- **Global steering** lives in `~/.kiro/steering/` and applies across your workspaces.
-- **Workspace steering** lives in this repository's `.kiro/steering/` directory and applies only here.
-- `inclusion: always` is for short rules needed in every task.
-- `inclusion: manual` is for facts that should be added only to a relevant session.
+- **Global steering** lives in `~/.kiro/steering/` and applies across workspaces.
+- **Workspace steering** lives in `.kiro/steering/` and applies only to this repository.
+- `inclusion: always` loads a file automatically.
+- `inclusion: manual` loads a file only when you add it with `/context add`.
 
-Run `/context show`. The supplied `.kiro/steering/safety-rules.md` is the always-loaded example. Do not create another copy of the same safety rules: duplication consumes context and can drift.
+Run `/context show`. The supplied `.kiro/steering/safety-rules.md` is the always-loaded example.
 
-Instead, ask Kiro to create a manual steering file that captures environment facts for this Windows upgrade:
+Ask Kiro to create a manual environment profile:
 
 ```text
-Create .kiro/steering/participant-environment.md with manual inclusion. Include:
+Create .kiro/steering/participant-environment.md with `inclusion: manual`. Include:
 1. Source OS: Windows Server 2019
 2. Target OS: Windows Server 2025
 3. Servers: APP01 (stateless web), DATA01 (stateful databases)
 4. Upgrade method: AWS SSM clone-upgrade (not in-place)
-5. Cutover: APP01 uses ALB target switch; DATA01 is validation-only
-6. Rollback: re-register source in ALB target group
+5. Cutover: APP01 uses an ALB target switch; DATA01 is validation-only
+6. Rollback: re-register source APP01 in the ALB target groups
 7. RTO: 4 hours
 8. RPO: 1 hour
 ```
 
-This gives you a reference for how to describe your own servers in steering later. Replace the values with your real server names, roles, and recovery objectives.
+Confirm and load the manual file:
 
-Run `/context show` to confirm that `participant-environment.md` is not loaded (because it's marked manual). When you start the adaptation exercise, load it manually with `/context add .kiro/steering/participant-environment.md`. Then run `/context show` again to verify it's now loaded.
+```text
+/context show
+/context add .kiro/steering/participant-environment.md
+/context show
+```
 
-**What you learned:** Kiro can help you create structured documentation — you describe what you need, and it generates the file with the right format.
+The first `/context show` should omit the manual file; the second should include it.
 
-## 3. Create a custom agent
+## 3. Create the restricted custom agent
 
-Start plain Kiro:
+Start plain Kiro if needed:
 
 ```text
 kiro-cli chat --v3
 ```
 
-Ask Kiro to create a custom agent for this upgrade exercise:
+Ask Kiro:
 
 ```text
-Create .kiro/agents/my-windows-upgrade.json as a read-only agent. Include:
-1. Role: Windows EC2 clone-upgrade assistant
-2. Behavior: follow all workspace steering, use only measured evidence, call out
-   anything that's not verified, never recommend in-place source upgrade
-3. tools and allowedTools: ["read", "grep", "glob", "code"]
-5. Resources: file://README.md, file://.kiro/steering/**/*.md, and file://inventory/assumed-inventory.yaml
-6. Welcome message: says the agent starts in read-only mode
+Create .kiro/agents/my-windows-upgrade.json using the documented JSON agent schema.
+Use these exact fields:
+1. name: my-windows-upgrade
+2. description: Participant-created Windows EC2 clone-upgrade assistant
+3. prompt: Follow workspace steering; use measured evidence; call out unverified
+   facts; never recommend an in-place source upgrade
+4. tools: ["read", "write", "grep", "glob", "shell"]
+5. allowedTools: ["read", "grep", "glob"]
+6. resources: ["file://README.md", "file://.kiro/steering/**/*.md",
+   "file://inventory/assumed-inventory.yaml"]
+7. toolsSettings.write:
+   - allowedPaths: ["./results/participant/**"]
+   - deniedPaths: ["./results/blocked/**", "./README.md", "./.env",
+     "./**/*.pem", "./.kiro/**"]
+8. toolsSettings.shell:
+   - allowedCommands: ["python3 tests/static/validate_repo.py*",
+     "py -3 tests/static/validate_repo.py*", "git status*", "git diff*"]
+   - deniedCommands: ["echo blocked-test", "aws ec2 terminate-instances*",
+     "aws cloudformation delete-stack*", "rm -rf *",
+     "Remove-Item * -Recurse*"]
+   - autoAllowReadonly: false
+   - denyByDefault: true
+9. welcomeMessage: explain that writes and shell commands are restricted
+
+Use `prompt`, not a `role` field. Show the proposed JSON and ask before writing it.
 ```
 
-Review the proposed file. Exit Kiro and validate:
+Exit Kiro and validate from the repository root.
 
 **Linux/macOS:**
 
@@ -88,21 +110,29 @@ kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.json
 kiro-cli agent list
 ```
 
-Your agent should appear in the workspace list. Then upgrade it to V3:
+Do not continue until validation succeeds and `my-windows-upgrade` appears as a workspace agent.
+
+## 4. Convert workspace agents for V3
+
+The JSON created above uses the portable V2 fields (`allowedTools` and `toolsSettings`). Convert the workspace agents once so the V3 trust engine receives equivalent `permissions.rules`:
 
 ```text
 kiro-cli chat --v3
 ```
 
-Run `/upgrade-agent` and select the workspace agents. This adds the `permissions` block that V3 needs to load the agent with `--agent`.
-
-Now start your agent:
+Inside chat, run:
 
 ```text
-kiro-cli chat --v3 --agent my-windows-upgrade
+/upgrade-agent
 ```
 
-## 4. Run your agent
+Select **V2 Workspace**. Kiro converts the workspace agents to universal V2+V3 JSON and creates backup files. Do not select unrelated global agents.
+
+Exit and validate the participant agent again using the command from step 3.
+
+> A V2 JSON agent can be discovered and loaded by the installed CLI, but V3 capability restrictions are not reliably enforced until this conversion. Complete the conversion before testing permissions.
+
+## 5. Run and verify the agent
 
 ```text
 kiro-cli chat --v3 --agent my-windows-upgrade
@@ -111,88 +141,67 @@ kiro-cli chat --v3 --agent my-windows-upgrade
 Ask:
 
 ```text
-Explain why APP01 and DATA01 need different cutover designs.
+Explain why APP01 and DATA01 need different cutover designs. Cite the repository
+files that support the answer and mark anything unverified.
 ```
 
-Inside chat, run `/tools` to see what's available. Then try asking it to run a command:
+Run `/tools`; the agent should expose read, write, and shell categories. Now test the converted permissions using harmless operations.
+
+**Allowed write:**
 
 ```text
-Run git status
+Create results/participant/agent-permission-test.md containing: allowed write test
 ```
 
-The agent should refuse — it doesn't have `shell` in its tools, so it cannot execute commands. This proves that tool boundaries limit what the agent can do.
+The file should be created.
 
-## 5. Add write and shell with permissions
-
-Ask Kiro to update your agent with write and shell capabilities:
+**Denied write:**
 
 ```text
-Update .kiro/agents/my-windows-upgrade.json:
-1. Give the agent write and shell capabilities, but require approval before each use
-2. Only allow writing to ./results/participant/ — block .env, .pem, and .kiro/
-3. Only allow running: validate_repo.py, git status, git diff
-4. Block dangerous commands: terminate-instances, delete-stack, rm -rf, Remove-Item -Recurse
+Create results/blocked/agent-permission-test.md containing: this must be blocked
 ```
 
-After Kiro updates the file, exit and validate:
+The write must fail because `results/blocked/**` is explicitly denied.
 
-**Linux/macOS:**
-
-```bash
-kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.json
-```
-
-**Windows PowerShell:**
-
-```powershell
-kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.json
-```
-
-Then start a new session and run `/upgrade-agent` to update V3 permissions. Start your agent:
+**Allowed shell:**
 
 ```text
-kiro-cli chat --v3 --agent my-windows-upgrade
+Run git status.
 ```
 
-Test the allowed path:
+The command should run because it is allowlisted.
+
+**Denied shell:**
 
 ```text
-Create results/participant/agent-permission-test.md containing one sentence
-that says this file was created by the agent within the allowed path.
+Run echo blocked-test.
 ```
 
-Then test the boundary:
+The command must fail because that exact harmless command is explicitly denied.
 
-```text
-Replace README.md with the text "permission test".
-```
+## 6. Understand the controls
 
-After `/upgrade-agent`, the V3 permissions use **deny** as a hard block. The `deny > ask > allow` resolution means deny always wins.
+| Control | Purpose |
+|---|---|
+| `tools` | Capabilities the agent can request |
+| `allowedTools` | V2 tools trusted without a general approval prompt |
+| `toolsSettings` | Portable V2 path and command restrictions |
+| `permissions.rules` | V3 allow/ask/deny rules added by `/upgrade-agent` |
+| Hooks | Custom pre/post tool logic; added in Module 05 |
+| IAM | Final authorization boundary for AWS API calls |
 
-## 6. Understand permissions
-
-After `/upgrade-agent`, your agent has a `permissions` block with three effects:
-
-| Effect | What happens | Can user override? |
-|---|---|---|
-| `deny` | Hard block — tool call is rejected | No |
-| `ask` | Kiro asks for approval before running | Yes |
-| `allow` | Runs automatically, no prompt | N/A |
-
-Permissions are the enforcement layer. `toolsSettings` (V2 fields) define the boundaries; `/upgrade-agent` converts them into hard `permissions.rules`.
+For V3 permission effects, `deny` is more restrictive than `ask`, and `ask` is more restrictive than `allow`. Do not use `--trust-all-tools` in this workshop.
 
 ## 7. Compare with the supplied reference agents
 
-Only after creating your own agent, compare it with the workshop's reference agents:
+After conversion, inspect:
 
-- `.kiro/agents/windows-upgrade.json` (orchestrator — works on both Linux/macOS and Windows)
-- `.kiro/agents/upgrade-reviewer.json` (read-only independent auditor)
-- `.kiro/agents/upgrade-executor.json` (restricted routine executor)
+- `.kiro/agents/windows-upgrade.json` — orchestrator
+- `.kiro/agents/upgrade-reviewer.json` — read-only independent auditor
+- `.kiro/agents/upgrade-executor.json` — restricted routine executor
 
-These three agents follow the best-practice trust boundary model: **orchestrator** (plans, coordinates, delegates), **reviewer** (audits evidence, cannot fix), and **executor** (runs approved tasks, cannot decide). They represent one way to configure a full upgrade agent set — yours doesn't need to match them exactly.
+The references demonstrate separation of duties. Your participant agent does not need to match them exactly.
 
-Study what they do differently, then decide which features you want to add to `my-windows-upgrade` in later modules. The reference agents are examples to learn from, not mandatory configurations.
+> **Windows users:** the reference agents include both `python3` and `py -3` variants for permitted Python commands.
 
-> **Windows users:** The consolidated `windows-upgrade.json` accepts both `python3` and `py -3` commands. You do not need a separate agent file.
-
-**Checkpoint:** you created upgrade-focused steering, created and validated `my-windows-upgrade`, ran it, added restricted write/shell tools, observed an approval prompt, and can explain the difference between `tools`, `allowedTools`, and `toolsSettings`.
+**Checkpoint:** the manual steering file loads on demand; `my-windows-upgrade` validates and is discovered; `/upgrade-agent` converts the workspace agents; the allowed write and `git status` succeed; the denied write and `echo blocked-test` fail.
