@@ -3,6 +3,10 @@
 ## Learning objective
 Use the v3 Spec chat mode to review requirements, design, and tasks before collecting read-only inventory from APP01 and DATA01.
 
+## Why this matters
+
+Before you upgrade anything, you need an accurate, evidence-based picture of what's actually running on each server — not assumptions. This module introduces Kiro's Spec mode, which is a structured way of turning a goal ("collect inventory") into reviewable requirements, a design, and a task list *before* any code runs. You'll first use Spec mode to understand an existing inventory Spec, then practice creating your own, and finally run the deterministic inventory script and have Kiro help you spot discrepancies against what was assumed. The point is: Spec mode is for planning and review, the Python script is what actually touches AWS and produces evidence.
+
 ## 1. Start Kiro in Spec mode
 
 Use the agent you created in Module 02:
@@ -11,7 +15,7 @@ Use the agent you created in Module 02:
 kiro-cli chat --v3 --mode spec --agent my-windows-upgrade
 ```
 
-This selects the v3 engine, your custom agent, and structured Spec mode.
+This selects the v3 engine, your custom agent (so the same restricted permissions from Module 02 apply here too), and structured Spec mode, which breaks a task into requirements → design → tasks instead of jumping straight to execution.
 
 ## 2. Review the instructor-approved Spec
 
@@ -44,13 +48,13 @@ per-server errors. Stop after drafting requirements, design, and tasks;
 do not execute the tasks.
 ```
 
-Review generated files before allowing any execution.
+Review generated files before allowing any execution — Spec mode is designed so you can read and adjust the plan (what will be collected, how, and where it's saved) before a single AWS call happens.
 
 This shows that Kiro can help you break down a complex task into structured requirements, design decisions, and actionable steps — you describe the goal, and it produces a plan you can review before anything runs.
 
 ## 3. Collect measured inventory
 
-Exit Kiro, then run the deterministic inventory script.
+Exit Kiro, then run the deterministic inventory script. This is a plain Python script, not Kiro — it's the actual mechanism that connects to AWS Systems Manager and pulls real facts from APP01 and DATA01, so the evidence you get doesn't depend on model behavior.
 
 **Windows PowerShell:**
 
@@ -69,6 +73,8 @@ python3 scripts/01_collect_inventory.py \
 ```
 
 ## 4. Review the saved evidence
+
+The script wrote its findings to `results/inventory/inventory.json`. Open it to see the raw measured facts before asking Kiro to interpret them:
 
 **Windows PowerShell:**
 
@@ -97,7 +103,7 @@ List discrepancies, unknown dependencies, stateful components, unsupported
 roles, and missing test oracles. Do not modify either file and do not call AWS.
 ```
 
-Program and service discovery is evidence, not proof of ownership or vendor support. Unknowns remain unknown until an application owner resolves them.
+`assumed-inventory.yaml` represents what someone *thought* was running before anyone measured it — comparing it against the real, measured JSON is exactly the kind of assumption-versus-reality check you'd do before any real upgrade project. Program and service discovery is evidence, not proof of ownership or vendor support. Unknowns remain unknown until an application owner resolves them.
 
 This shows that Kiro can help you compare data sets and find discrepancies — it reads JSON/YAML, cross-references fields, and highlights what doesn't match, what's missing, and what needs human decision.
 

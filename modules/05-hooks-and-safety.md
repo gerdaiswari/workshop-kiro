@@ -4,9 +4,13 @@
 
 Create a Kiro `preToolUse` safety hook and a `postToolUse` validation hook, add them to the agent you built in Module 02, verify their behavior locally, and then capture baseline and backup evidence.
 
+## Why this matters
+
+Module 02's `deniedCommands` list is a good backstop, but it's a static list you have to remember to update. A hook is a small script *you* write that Kiro runs automatically before or after certain tool calls, so you can add custom logic — like scanning a shell command for dangerous patterns with a regex — without touching the agent JSON schema every time. This module has two parts: first you build and test a safety hook that blocks destructive commands before they run, then you capture "baseline" evidence (what healthy APP01 and DATA01 look like right now) and native database backups, so that after the Windows Server 2025 upgrade you have something concrete to compare against and something to restore from if things go wrong.
+
 ## 1. Understand the hook contract
 
-A hook belongs to an agent configuration. It is not a global operating-system file watcher.
+A hook belongs to an agent configuration — it's defined inside the agent's JSON file, not a global setting. It is not a global operating-system file watcher; it only fires for tool calls made by that specific agent.
 
 This module uses two documented triggers:
 
@@ -15,7 +19,7 @@ This module uses two documented triggers:
 | `preToolUse` | `shell` | Before the agent executes a shell tool request |
 | `postToolUse` | `write` | After the agent writes a file |
 
-For `preToolUse`, Kiro sends tool context as JSON on standard input. Exit code `0` allows the tool; exit code `2` blocks it.
+For `preToolUse`, Kiro sends tool context as JSON on standard input — this includes the exact command the agent is about to run, so your hook script can inspect it before it executes. Exit code `0` allows the tool to proceed; exit code `2` blocks it. This is a standard Unix convention (0 = success, nonzero = failure) that Kiro's hook system relies on.
 
 ## 2. Create your own destructive-command blocker
 
@@ -25,7 +29,7 @@ Start plain Kiro:
 kiro-cli chat --v3
 ```
 
-Ask it to create `scripts/hooks/participant_block_destructive.py` with exactly this content:
+Ask it to create `scripts/hooks/participant_block_destructive.py` with exactly this content. This script reads the JSON payload Kiro sends on stdin, checks the shell command against a regex of known-dangerous patterns (instance termination, stack deletion, recursive deletes), and exits with code 2 to block a match or 0 to allow everything else:
 
 ```python
 #!/usr/bin/env python3
@@ -57,11 +61,13 @@ if BLOCKED.search(command):
 raise SystemExit(0)
 ```
 
-Review the regex carefully before approving the write. This is intentionally a small learning hook; the supplied `scripts/hooks/block_destructive.py` is the more complete reference implementation.
+Review the regex carefully before approving the write — you're about to trust this script to block dangerous commands, so it's worth reading exactly what it matches. This is intentionally a small learning hook; the supplied `scripts/hooks/block_destructive.py` is the more complete reference implementation with broader coverage.
 
 ## 3. Test the hook before attaching it
 
-Exit Kiro. Test a read-only command first.
+A hook that silently fails to block anything is worse than no hook at all, so test it standalone — by feeding it fake JSON input directly on the command line — before wiring it into your agent. This also means you can test the "blocks a dangerous command" case without any real risk, since you're just piping text into a script, not actually calling AWS.
+
+Exit Kiro. Test a read-only command first — this should be **allowed**, since `describe-instances` only reads data and isn't in the blocked pattern list.
 
 **Windows PowerShell:**
 
@@ -81,7 +87,7 @@ echo $?
 
 Expected exit code: `0`.
 
-Now test a fake destructive request. This does not call AWS.
+Now test a fake destructive request — this should be **blocked** (exit code 2), since the command text matches the `terminate-instances` pattern. Note that this test does not call AWS at all; it's purely checking whether your script's regex catches the pattern in a piece of text you're feeding it directly.
 
 **Windows PowerShell:**
 
@@ -101,13 +107,13 @@ echo $?
 
 Expected exit code: `2`.
 
-Do not attach a hook that fails these two tests.
+Do not attach a hook that fails these two tests — if it doesn't correctly allow the safe command and block the dangerous one now, wiring it into your agent won't fix that; it will just make the failure harder to notice.
 
 This shows that Kiro can help you write safety automation — you describe what should be blocked, and it generates a working script with the correct input/output contract that you can test independently before trusting it.
 
 ## 4. Add hooks to your agent
 
-Use plain Kiro to update `.kiro/agents/my-windows-upgrade.json`. Add a top-level `hooks` object using the command for your workstation.
+Now that you've proven the script works standalone, wire it into the agent so Kiro actually calls it automatically. Use plain Kiro to update `.kiro/agents/my-windows-upgrade.json`. Add a top-level `hooks` object using the command for your workstation — the `preToolUse` hook runs your blocker script before every shell command, and the `postToolUse` hook runs the repository's quick validator after every file write, so mistakes get caught immediately rather than at the end of a session.
 
 **Windows hook configuration:**
 
@@ -181,21 +187,21 @@ Inside chat:
 /hooks
 ```
 
-Confirm both hooks are listed. Ask the agent to update `results/participant/agent-permission-test.md`. The path is allowed, so the write may run without another prompt; the quick validator should run afterward. Review the displayed path and diff before continuing.
+Confirm both hooks are listed — this is Kiro's way of showing you exactly what's wired up for the active agent, so you can double-check before trusting it in a real task. Ask the agent to update `results/participant/agent-permission-test.md`. The path is allowed, so the write may run without another prompt; the quick validator should run afterward as your `postToolUse` hook. Review the displayed path and diff before continuing.
 
-Do not test a real termination request. The direct fake-input test above proves blocking behavior without creating an AWS API call.
+Do not test a real termination request. The direct fake-input test above (step 3) already proves the blocking behavior works, without needing to risk an actual AWS API call.
 
 ## 6. Compare with the reference hook
 
-Compare your script with `scripts/hooks/block_destructive.py`. Identify differences in JSON error handling, command coverage, and messages.
+Compare your script with `scripts/hooks/block_destructive.py`. Identify differences in JSON error handling, command coverage, and messages — this is a useful exercise for seeing what a production-grade version of the same idea looks like.
 
-The reference agents intentionally do not embed one hook command because the Python launcher differs by workstation (`python3` on Linux/macOS and `py -3` on Windows). Your participant agent uses the workstation-specific hook configuration from step 4.
+The reference agents intentionally do not embed one hardcoded hook command because the Python launcher differs by workstation (`python3` on Linux/macOS and `py -3` on Windows). Your participant agent uses the workstation-specific hook configuration from step 4.
 
-Hooks are defense in depth; they do not replace IAM or human approval.
+Hooks are defense in depth; they do not replace IAM or human approval. Think of them as one more layer that catches mistakes early, not the only thing standing between you and a destructive action.
 
 ## 7. Capture baseline tests
 
-Run deterministic tests outside Kiro so the evidence does not depend on model behavior.
+Run deterministic tests outside Kiro so the evidence does not depend on model behavior — this is the "before" snapshot of APP01 and DATA01 while they're healthy on Windows Server 2019, which you'll compare against after the upgrade in Module 07 to prove nothing regressed.
 
 **Windows PowerShell:**
 
@@ -215,9 +221,11 @@ python3 scripts/03_run_tests.py \
   --stack-name kiro-ws2025-lab
 ```
 
-Results are written under `results/tests/baseline/`. Baseline must pass before an upgrade begins.
+Results are written under `results/tests/baseline/`. Baseline must pass before an upgrade begins — if the servers already have failing tests before you touch anything, you'd have no way to tell whether a later failure was caused by the upgrade or was already there.
 
 ## 8. Capture stateful recovery evidence
+
+DATA01 runs three database engines, so before any upgrade touches it, take a native backup — a real, restorable database backup, independent of the AMI snapshot AWS creates during clone-upgrade. This guarantees you have a way back even if the clone-upgrade process itself goes wrong.
 
 **Windows PowerShell:**
 

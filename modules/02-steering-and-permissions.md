@@ -4,6 +4,10 @@
 
 Create workspace steering and a restricted custom agent, convert the agent once for Kiro CLI V3, and verify its allowed and denied operations with harmless tests.
 
+## Why this matters
+
+So far you have used Kiro's default, unrestricted agent. In a real upgrade project you don't want every session to have unlimited read/write/shell access — you want an agent that always follows your safety rules, can only write to specific folders, and can only run a short allowlist of shell commands. This module builds exactly that: a custom agent scoped down to what a Windows-upgrade assistant actually needs, plus durable "steering" instructions that travel with every session in this repository. You'll create the agent, prove its restrictions work with harmless test commands, and compare it against the reference agents already included in the repo.
+
 ## 1. Start a chat with Kiro
 
 From the repository root:
@@ -23,14 +27,14 @@ This shows that Kiro can inspect project files and explain how the workspace is 
 
 ## 2. Create steering
 
-Steering gives Kiro durable instructions and context:
+Steering gives Kiro durable instructions and context — think of it as a set of standing notes that Kiro re-reads every time it's relevant, so you never have to repeat the same safety rules or project facts in every prompt.
 
-- **Global steering** lives in `~/.kiro/steering/` and applies across workspaces.
+- **Global steering** lives in `~/.kiro/steering/` and applies across workspaces (every repository you open on your machine).
 - **Workspace steering** lives in `.kiro/steering/` and applies only to this repository.
-- `inclusion: always` loads a file automatically.
-- `inclusion: manual` loads a file only when you add it with `/context add`.
+- `inclusion: always` loads a file automatically into every session, with no action needed.
+- `inclusion: manual` loads a file only when you explicitly add it with `/context add` — useful for reference material you only want in context sometimes, so it doesn't crowd out other information by default.
 
-Run `/context show`. The supplied `.kiro/steering/safety-rules.md` is the always-loaded example.
+Run `/context show`. The supplied `.kiro/steering/safety-rules.md` is the always-loaded example — you should see it listed without doing anything else, because `inclusion: always` files are loaded automatically at session start.
 
 Ask Kiro to create a manual environment profile:
 
@@ -46,7 +50,7 @@ Create .kiro/steering/participant-environment.md with `inclusion: manual`. Inclu
 8. RPO: 1 hour
 ```
 
-Confirm and load the manual file:
+Now prove to yourself that manual steering behaves differently from always-loaded steering. Run `/context show` to confirm the new file is **not** loaded yet — manual files stay out of context until you ask for them. Then manually add it with `/context add .kiro/steering/participant-environment.md`. Run `/context show` again — the file should now appear in the list, because you explicitly opted it in for this session.
 
 ```text
 /context show
@@ -54,9 +58,9 @@ Confirm and load the manual file:
 /context show
 ```
 
-The first `/context show` should omit the manual file; the second should include it.
-
 ## 3. Create the restricted custom agent
+
+A custom agent is a JSON file that defines a named Kiro persona with its own tool access, write/shell restrictions, and behavior prompt. Instead of trusting Kiro with everything by default, you list exactly which tools it can use, which of those it can use *without* asking you first, and which paths or commands are explicitly blocked. You're about to build one scoped for this Windows-upgrade workshop: it can read and analyze freely, but its writes and shell commands are locked down to a small, reviewed set.
 
 Start plain Kiro if needed:
 
@@ -94,7 +98,14 @@ Use these exact fields:
 Use `prompt`, not a `role` field. Show the proposed JSON and ask before writing it.
 ```
 
-Exit Kiro and validate from the repository root.
+A quick guide to what each field does:
+
+- `tools` — the full list of capabilities this agent is even allowed to request (read, write, grep, glob, shell). Anything not listed here is unavailable no matter what.
+- `allowedTools` — a subset of `tools` that Kiro can use *without pausing to ask you* for approval each time. Here that's just read-only inspection (`read`, `grep`, `glob`); every write and shell request will still prompt you.
+- `toolsSettings.write.allowedPaths` / `deniedPaths` — even when a write is approved, it can only land under `results/participant/**`. Sensitive files like `.env`, `.pem` keys, and the `.kiro/` config folder are explicitly denied so the agent can never touch them, even by mistake.
+- `toolsSettings.shell.allowedCommands` / `deniedCommands` — the agent can only run a short allowlist of harmless commands (running the validator script, `git status`, `git diff`). Destructive AWS calls and recursive deletes are explicitly denied as a backstop, and `denyByDefault: true` means anything not on the allowlist is refused rather than silently permitted.
+
+Exit Kiro and validate from the repository root. `agent validate` checks that the JSON file matches the schema Kiro expects (correct field names, valid values) — it doesn't check AWS permissions, just that the file itself is well-formed and usable.
 
 **Linux/macOS:**
 
@@ -110,11 +121,11 @@ kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.json
 kiro-cli agent list
 ```
 
-Do not continue until validation succeeds and `my-windows-upgrade` appears as a workspace agent.
+Do not continue until validation succeeds and `my-windows-upgrade` appears as a workspace agent in the `agent list` output — that confirms Kiro can discover and load it.
 
 ## 4. Convert workspace agents for V3
 
-The JSON created above uses the portable V2 fields (`allowedTools` and `toolsSettings`). Convert the workspace agents once so the V3 trust engine receives equivalent `permissions.rules`:
+The JSON you just created uses the portable V2 fields (`allowedTools` and `toolsSettings`) — these work across Kiro CLI versions, but Kiro's newer V3 "trust engine" reads a different, more granular permission format (`permissions.rules`). The `/upgrade-agent` command translates your V2 fields into the equivalent V3 rules automatically, so you don't have to hand-write both formats. Run this conversion once so your agent's restrictions are actually enforced under V3:
 
 ```text
 kiro-cli chat --v3
@@ -126,11 +137,11 @@ Inside chat, run:
 /upgrade-agent
 ```
 
-Select **V2 Workspace**. Kiro converts the workspace agents to universal V2+V3 JSON and creates backup files. Do not select unrelated global agents.
+Select **V2 Workspace** — this tells Kiro to convert the agent files that live in this repository's `.kiro/agents/` folder (as opposed to global agents in your home directory, which are unrelated to this workshop). Kiro converts the workspace agents to universal V2+V3 JSON and creates backup files (so your original V2 JSON is preserved if you need to compare or revert). Do not select unrelated global agents.
 
 Exit and validate the participant agent again using the command from step 3.
 
-> A V2 JSON agent can be discovered and loaded by the installed CLI, but V3 capability restrictions are not reliably enforced until this conversion. Complete the conversion before testing permissions.
+> **Why this step is not optional:** a V2 JSON agent can be discovered and loaded by the installed CLI, but V3 capability restrictions are not reliably enforced until this conversion runs. In other words, without this step your `deniedCommands` and `deniedPaths` might not actually block anything under V3. Complete the conversion before testing permissions in the next section.
 
 ## 5. Run and verify the agent
 
@@ -145,7 +156,7 @@ Explain why APP01 and DATA01 need different cutover designs. Cite the repository
 files that support the answer and mark anything unverified.
 ```
 
-Run `/tools`; the agent should expose read, write, and shell categories. Now test the converted permissions using harmless operations.
+Run `/tools`; the agent should expose read, write, and shell categories. Now test the converted permissions using harmless operations — each test below pairs an action that should succeed with one that should fail, so you can directly observe the restrictions working rather than assuming they do.
 
 **Allowed write:**
 
@@ -153,7 +164,7 @@ Run `/tools`; the agent should expose read, write, and shell categories. Now tes
 Create results/participant/agent-permission-test.md containing: allowed write test
 ```
 
-The file should be created.
+The file should be created — `results/participant/**` is on the write allowlist.
 
 **Denied write:**
 
@@ -161,7 +172,7 @@ The file should be created.
 Create results/blocked/agent-permission-test.md containing: this must be blocked
 ```
 
-The write must fail because `results/blocked/**` is explicitly denied.
+The write must fail because `results/blocked/**` is explicitly denied. This is what proves the write restriction is real, not just documentation.
 
 **Allowed shell:**
 
@@ -177,7 +188,7 @@ The command should run because it is allowlisted.
 Run echo blocked-test.
 ```
 
-The command must fail because that exact harmless command is explicitly denied.
+The command must fail because that exact harmless command is explicitly denied — it's a deliberately harmless example so you can safely prove the deny-list works without risking anything.
 
 ## 6. Understand the controls
 
@@ -190,7 +201,7 @@ The command must fail because that exact harmless command is explicitly denied.
 | Hooks | Custom pre/post tool logic; added in Module 05 |
 | IAM | Final authorization boundary for AWS API calls |
 
-For V3 permission effects, `deny` is more restrictive than `ask`, and `ask` is more restrictive than `allow`. Do not use `--trust-all-tools` in this workshop.
+For V3 permission effects, `deny` is more restrictive than `ask`, and `ask` is more restrictive than `allow` — think of it as a strict hierarchy: a `deny` rule always wins even if another rule would allow the same action, and `ask` always pauses for your confirmation even if the agent is otherwise trusted. Do not use `--trust-all-tools` in this workshop, since that flag bypasses all of these checks and defeats the purpose of building a restricted agent.
 
 ## 7. Compare with the supplied reference agents
 
@@ -200,7 +211,7 @@ After conversion, inspect:
 - `.kiro/agents/upgrade-reviewer.json` — read-only independent auditor
 - `.kiro/agents/upgrade-executor.json` — restricted routine executor
 
-The references demonstrate separation of duties. Your participant agent does not need to match them exactly.
+The references demonstrate separation of duties: one agent plans and coordinates, one only reviews without the ability to change anything, and one only executes a narrow set of approved scripts. This mirrors how you'd divide responsibilities among people on a real operations team. Your participant agent does not need to match them exactly — you'll build your own versions of these specialized roles in Module 10B.
 
 > **Windows users:** the reference agents include both `python3` and `py -3` variants for permitted Python commands.
 

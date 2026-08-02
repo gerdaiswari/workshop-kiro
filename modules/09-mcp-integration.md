@@ -4,15 +4,19 @@
 
 Configure an MCP server yourself, expose its tools to the agent you created, verify discovery, and use it for current AWS documentation without calling your AWS account APIs.
 
+## Why this matters
+
+MCP stands for Model Context Protocol — it's a standard way to give an AI agent access to external tools and data sources beyond what's built into the chat client. Instead of Kiro relying only on what the underlying language model learned during training (which can be outdated for fast-moving services like AWS), an MCP server lets Kiro fetch live information at the moment you ask. In this module you'll connect the read-only AWS Knowledge MCP server, which gives Kiro the ability to look up current AWS documentation — with real source links — instead of guessing based on possibly stale knowledge. This server does not touch your AWS account in any way; it only serves public documentation.
+
 > **Workshop navigation:** Module 06 upgrades are running → **Module 09 (you are here)** → Module 10 → Module 10B → return to Module 07 after both upgrades succeed.
 >
 > Complete this module in a third terminal while the two Module 06 upgrade terminals continue polling. Do not stop or reuse those terminals.
 
 ## 1. Understand why MCP is needed
 
-A language model may have stale AWS product knowledge. The read-only AWS Knowledge MCP server lets Kiro retrieve current AWS documentation and source links.
+A language model may have stale AWS product knowledge — AWS ships new features and changes documentation constantly, faster than any model's training data can keep up. The read-only AWS Knowledge MCP server lets Kiro retrieve current AWS documentation and source links on demand, so its answers about AWS behavior are grounded in what's actually published today.
 
-In this workshop MCP is used for documentation only. It does not authenticate to your AWS account, inspect your instances, or perform upgrades.
+In this workshop MCP is used for documentation only. It does not authenticate to your AWS account, inspect your instances, or perform upgrades — connecting it introduces no new risk to your AWS resources.
 
 This shows that Kiro can help you access current AWS documentation on demand — instead of searching docs manually, Kiro retrieves the latest information and source links directly in your conversation, so your decisions are based on current facts rather than stale training data.
 
@@ -26,10 +30,10 @@ kiro-cli chat --v3
 
 Ask Kiro to update `.kiro/agents/my-windows-upgrade.json` with these four changes:
 
-1. Add `"@aws-knowledge-mcp-server/*"` to `tools`.
-2. Add `"@aws-knowledge-mcp-server/*"` to `allowedTools` because this server is read-only documentation access.
-3. Add a V3 permission rule with capability `mcp`, effect `allow`, and match `aws-knowledge-mcp-server/*`.
-4. Add this top-level object:
+1. Add `"@aws-knowledge-mcp-server/*"` to `tools` — this makes the server's tools available to the agent at all (without it, the agent doesn't even know the server exists).
+2. Add `"@aws-knowledge-mcp-server/*"` to `allowedTools` because this server is read-only documentation access, so it's safe to trust without an approval prompt every time.
+3. Add a V3 permission rule with capability `mcp`, effect `allow`, and match `aws-knowledge-mcp-server/*` — this is the V3-format equivalent of step 2, matching the permission model introduced in Module 02.
+4. Add this top-level object, which tells Kiro where the server lives and how long to wait for a response:
 
 ```json
 "mcpServers": {
@@ -40,7 +44,7 @@ Ask Kiro to update `.kiro/agents/my-windows-upgrade.json` with these four change
 }
 ```
 
-Review the URL and tool name before approving the edit. MCP servers are code/data trust boundaries; do not add an unknown server merely because a prompt suggests it.
+Review the URL and tool name before approving the edit. MCP servers are code/data trust boundaries — Kiro will send your questions to whatever URL is configured here and act on what comes back, so treat adding a new MCP server with the same scrutiny you'd give a new dependency. Do not add an unknown server merely because a prompt suggests it.
 
 ## 3. Validate the updated agent
 
@@ -58,7 +62,7 @@ kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.json
 kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.json
 ```
 
-A schema-valid agent does not prove the network endpoint is reachable; discovery is the next check.
+A schema-valid agent does not prove the network endpoint is reachable — validation only confirms your JSON is well-formed; it doesn't attempt a network call. Discovery, in the next step, is the actual check that Kiro can reach and use the server.
 
 ## 4. Verify MCP discovery
 
@@ -66,7 +70,7 @@ A schema-valid agent does not prove the network endpoint is reachable; discovery
 kiro-cli mcp list workspace
 ```
 
-Expected section:
+Expected section — seeing this confirms Kiro successfully found your agent's MCP configuration and recognizes the server as attached:
 
 ```text
 my-windows-upgrade
@@ -115,7 +119,7 @@ CloudFormation, Systems Manager, and IMDS security guidance. Separate documented
 requirements from recommendations and include source links. Do not edit files.
 ```
 
-MCP improves documentation currency; it does not prove application compatibility or replace deterministic tests.
+MCP improves documentation currency; it does not prove application compatibility or replace deterministic tests — current AWS documentation tells you what AWS *supports*, not whether your specific applications will actually work after the upgrade. That's still the job of the tests from Modules 05 and 07.
 
 This shows that Kiro can help you audit your infrastructure against current best practices — it cross-references your CloudFormation templates with live AWS documentation and separates hard requirements from recommendations, with source links you can verify.
 

@@ -3,11 +3,15 @@
 ## Learning objective
 Launch Windows Server 2025 validation copies, compare them with the baseline, inject a controlled APP01 failure, and prove the tests detect and recover from it.
 
+## Why this matters
+
+Module 06 produced an upgraded AMI for each server, but an AMI sitting in your account proves nothing on its own. This module launches a real, running EC2 instance from that AMI (a "validation copy," isolated from your source servers), runs the same tests you ran as a baseline in Module 05, and compares the two result sets. Then — and this is the important part — it deliberately breaks something in the validation copy and re-runs the tests, to prove your test suite actually detects a real regression instead of just always reporting success. A test suite that has never failed hasn't proven anything yet.
+
 > **Entry gate:** return here after Modules 09, 10, and 10B only when both Module 06 upgrade scripts report `Success` and `results/upgrades/APP01.json` plus `results/upgrades/DATA01.json` contain `upgraded_ami_id`. If either upgrade is still running, continue monitoring; do not bypass the evidence.
 
 ## 1. Launch validation copies
 
-Each command requires approval, launches from a recorded upgraded AMI, enforces IMDSv2, waits for EC2 and SSM readiness, and records the new instance ID.
+Each command requires approval, launches from a recorded upgraded AMI, enforces IMDSv2 (a more secure way for the instance to fetch its metadata, blocking a common SSRF attack path), waits for EC2 and SSM readiness, and records the new instance ID. These validation instances are separate from your source APP01/DATA01 — nothing here touches the servers that are still running Windows Server 2019.
 
 **Windows PowerShell:**
 
@@ -45,11 +49,11 @@ python3 scripts/03_run_tests.py --phase post \
 python3 scripts/06_compare_results.py
 ```
 
-Review `results/tests/comparison.json` and `results/tests/comparison.md`. The Windows version should change; application, service, API, and data behavior should not regress.
+Review `results/tests/comparison.json` and `results/tests/comparison.md`. The Windows version should change (that's the expected, intentional difference); application, service, API, and data behavior should not regress — anything else showing up as different is a signal worth investigating.
 
 ## 3. Inject a controlled validation-only failure
 
-The injection script first verifies that the target is tagged `Role=VAL-APP01`; it does not target source APP01.
+The injection script first verifies that the target is tagged `Role=VAL-APP01`; it does not target source APP01 — this tag check is a safeguard so a typo or misconfiguration can't accidentally break your real source server instead of the disposable validation copy.
 
 **Windows PowerShell:**
 
@@ -69,7 +73,7 @@ python3 scripts/03_run_tests.py --phase post \
   --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
-The Next.js checks should now fail.
+The Next.js checks should now fail — this is the "red" state you want to see, proving the test suite notices when something is actually broken.
 
 Start the agent you created:
 

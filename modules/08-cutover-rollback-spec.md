@@ -1,8 +1,14 @@
 # Module 08 – APP01 cutover and rollback simulation
 
+## Learning objective
+
+Practice a health-gated ALB (Application Load Balancer) traffic switch from APP01's source instance to its validated Windows Server 2025 copy, then reverse it, and understand why this pattern only applies to APP01.
+
 ## Why only APP01
 
-APP01 contains synthetic stateless applications. DATA01 continues accepting writes after its image is created, so its clone becomes stale. Never point production applications at VAL-DATA01 as an AMI-only cutover. A real database cutover requires synchronization or a write freeze, final backup/restore, validation, and RTO/RPO approval.
+"Cutover" means switching real traffic from the old server to the new one. APP01 is a good candidate for this because it's stateless — the applications running on it (IIS, Spring Boot, Next.js, nginx) don't hold data that changes moment to moment, so a validated copy of APP01 is just as current as the source, and traffic can move between them safely.
+
+DATA01 is different: it continues accepting writes (new database rows, updated files) after its image is created, so its clone becomes stale the moment new data arrives on the source. Never point production applications at VAL-DATA01 as an AMI-only cutover — that would mean silently losing every write that happened after the clone was taken. A real database cutover requires synchronization (ongoing replication) or a write freeze, a final backup/restore, validation, and RTO/RPO approval — none of which this workshop's AMI clone does on its own.
 
 ## 1. Preview the APP01 transition
 
@@ -20,7 +26,7 @@ python3 scripts/07_app_cutover.py --action plan \
   --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
-The plan shows source and validation instances, both target groups, health, proposed operations, and rollback.
+The plan shows source and validation instances, both target groups (the ALB routing config that decides which server receives traffic), health, proposed operations, and rollback — reviewing this before running the actual cutover lets you confirm the script will do what you expect.
 
 ## 2. Cut over after explicit approval
 
@@ -38,7 +44,7 @@ python3 scripts/07_app_cutover.py --action cutover \
   --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
-The script registers VAL-APP01, waits for healthy IIS and nginx target groups, probes ALB routes, and only then deregisters source APP01.
+The script registers VAL-APP01 (the validated Windows Server 2025 copy) with the load balancer's target groups, waits for healthy IIS and nginx target groups (so traffic only shifts once the new server is confirmed working), probes ALB routes to double-check real requests succeed, and only then deregisters source APP01 — this ordering means there's no gap where neither server is receiving traffic.
 
 ## 3. Roll back
 
@@ -56,7 +62,7 @@ python3 scripts/07_app_cutover.py --action rollback \
   --region us-east-1 --stack-name kiro-ws2025-lab
 ```
 
-Measure and record recovery time. Target registration and application warm-up mean rollback is not literally instantaneous.
+Measure and record recovery time. Target registration and application warm-up mean rollback is not literally instantaneous — even though the command itself runs quickly, the ALB needs time to detect the source instance as healthy again and start sending it real traffic, so "rollback" has a measurable duration, not zero.
 
 ## 4. Discuss production patterns with Kiro
 

@@ -4,6 +4,10 @@
 
 Create a Kiro skill yourself, attach it to your custom agent, activate it in a real planning task, and understand how a skill differs from steering and an agent prompt.
 
+## Why this matters
+
+By now you've used three different ways to give Kiro persistent knowledge: steering (Module 02, durable project facts and rules), an agent prompt (Module 02, one agent's role and behavior), and now a skill — a reusable, step-by-step procedure that Kiro loads only when it's relevant to the task at hand. The distinction matters because each is meant for different content: steering holds facts about *this* project, an agent prompt defines *one agent's* personality and boundaries, and a skill holds a *portable* workflow you could copy into a completely different repository and it would still make sense. You'll build a skill that encodes the Windows-upgrade procedure itself, then use it to scale this workshop's two-server exercise into a rollout plan for 40 servers.
+
 > **Workshop navigation:** Module 06 upgrades are running → Module 09 → **Module 10 (you are here)** → Module 10B → return to Module 07 after both upgrades succeed.
 >
 > Complete this module in the third terminal while the original upgrade terminals continue polling.
@@ -16,7 +20,7 @@ Create a Kiro skill yourself, attach it to your custom agent, activate it in a r
 | Agent prompt | One named agent | Role, behavior, tool boundaries, and approval posture |
 | Skill | Reusable procedure loaded when relevant | Step-by-step domain workflow and reference material |
 
-A skill should be reusable across repositories and workloads. Do not put account-specific credentials, instance IDs, or temporary state in it.
+A skill should be reusable across repositories and workloads — that's the test for whether something belongs in a skill versus steering. Do not put account-specific credentials, instance IDs, or temporary state in it; those belong in steering or in your inventory files, not in a procedure meant to travel with you to other projects.
 
 ## 2. Create your own skill
 
@@ -57,17 +61,17 @@ description: Participant-created procedure for assessing and validating Windows 
 - Cutover, rollback, owner, and approval record.
 ```
 
-Review the front matter and procedure before approving the write.
+Review the front matter and procedure before approving the write. The `description` field in the front matter is what Kiro uses to decide when this skill is relevant — it's what gets matched against your prompt, so it needs to clearly state what the skill is for.
 
 ## 3. Attach the skill to your agent
 
-Ask plain Kiro to add your own skill to the `resources` array in `.kiro/agents/my-windows-upgrade.json`:
+Ask plain Kiro to add your own skill to the `resources` array in `.kiro/agents/my-windows-upgrade.json` — this is what makes the skill available to your agent at all; without it, Kiro doesn't know the skill file exists:
 
 ```json
 "skill://.kiro/skills/participant-windows-upgrade/SKILL.md"
 ```
 
-Point at your own skill file by name rather than a wildcard, so your intent is explicit. Keep the existing README and steering resources. Validate the agent after the edit.
+Point at your own skill file by name rather than a wildcard, so your intent is explicit and you can see exactly which skill is attached just by reading the agent JSON. Keep the existing README and steering resources. Validate the agent after the edit.
 
 **Windows PowerShell:**
 
@@ -81,7 +85,7 @@ kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.json
 kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.json
 ```
 
-Your skill and the supplied `windows-upgrade` skill can coexist. They have different folder names, so they never overwrite each other. Kiro may see both skills' short descriptions, but a skill's full content only loads when it is activated, and Kiro uses whichever one your prompt asks for. Two skills are alternatives, not a conflict.
+Your skill and the supplied `windows-upgrade` skill can coexist. They have different folder names, so they never overwrite each other. Kiro may see both skills' short descriptions when deciding what's relevant, but a skill's full content only loads when it is actually activated for a given task, and Kiro uses whichever one your prompt asks for. Two skills are alternatives, not a conflict — it's no different from having two reference documents on a shelf.
 
 ## 4. Activate the skill
 
@@ -91,7 +95,7 @@ Start your agent:
 kiro-cli chat --v3 --agent my-windows-upgrade
 ```
 
-Ask:
+Ask — notice the prompt explicitly says "Activate," which tells Kiro to load the skill's full content into context for this task, rather than just knowing it exists:
 
 ```text
 Activate the participant-windows-upgrade skill. Convert this two-server evidence

@@ -3,7 +3,11 @@
 ## Learning objective
 Review the high-impact change in Kiro Spec mode, then start the AWS-owned clone-upgrade automation separately for APP01 and DATA01 with explicit confirmation.
 
-> **Entry gate:** complete Module 05 first. `results/tests/baseline/summary.json` must show `passed: true`; before starting DATA01, `results/backups/summary.json` must also show `passed: true`. `04_start_upgrade.py` checks these files but does not create them.
+## Why this matters
+
+This is the module where the actual Windows Server upgrade happens — but notice it doesn't upgrade your source servers in place. AWS's `AWSEC2-CloneInstanceAndUpgradeWindows` runbook takes an image of the source instance, upgrades a *temporary copy* of it to Windows Server 2025, and hands you back a new AMI — the original APP01 and DATA01 keep running untouched on Windows Server 2019 the whole time. You'll start this automation for both servers, each in its own terminal, because the runbook can take about two hours per server and you'll want to keep monitoring both while doing other things (Modules 09, 10, and 10B) during the wait.
+
+> **Entry gate:** complete Module 05 first. `results/tests/baseline/summary.json` must show `passed: true`; before starting DATA01, `results/backups/summary.json` must also show `passed: true`. `04_start_upgrade.py` checks these files but does not create them — if you skipped Module 05, come back and run its baseline and backup steps first.
 
 ## 1. Review the change in Spec mode
 
@@ -23,7 +27,7 @@ backup prerequisites, rollback artifacts, and stop conditions.
 Do not call AWS and do not edit files.
 ```
 
-Do not run upgrade tasks unattended or with `--trust-all-tools`. The deterministic script below requires typed confirmation for each server.
+Do not run upgrade tasks unattended or with `--trust-all-tools` — this is exactly the kind of high-impact, billable, multi-hour AWS change that the safety rules require explicit approval for. The deterministic script below requires typed confirmation for each server, so you always consciously start each upgrade rather than it happening as a side effect of something else.
 
 This shows that Kiro can help you prepare for a high-impact change — it reads your infrastructure code and evidence files, then summarizes exactly what will happen, what it will cost, how long it takes, and what the rollback looks like, so you make an informed decision before typing "yes".
 
@@ -47,7 +51,7 @@ python3 scripts/04_start_upgrade.py \
   --stack-name kiro-ws2025-lab
 ```
 
-Type `APP01` when prompted. Keep this terminal open: the script polls until the automation reaches a terminal state and continuously updates `results/upgrades/APP01.json`.
+Type `APP01` when prompted — this typed confirmation is the actual approval gate; the script won't proceed without it. Keep this terminal open: the script polls until the automation reaches a terminal state (success or failure) and continuously updates `results/upgrades/APP01.json`, so you can watch progress without re-running anything.
 
 The expected runbook inputs include:
 
@@ -62,7 +66,7 @@ RebootInstanceBeforeTakingImage=False
 
 ## 3. Start DATA01 in terminal 2
 
-Open a **separate terminal** in the repository root. Start DATA01 only after its baseline and native-backup evidence pass. It does not need to wait for APP01 to finish because the two executions target different source instances and write separate evidence files.
+Open a **separate terminal** in the repository root — this is the second of the two concurrent upgrade terminals mentioned above. Start DATA01 only after its baseline and native-backup evidence pass. It does not need to wait for APP01 to finish because the two executions target different source instances and write separate evidence files, so they run fully independently of each other.
 
 **Windows PowerShell:**
 
