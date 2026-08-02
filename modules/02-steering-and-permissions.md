@@ -60,24 +60,17 @@ Start plain Kiro again if needed:
 kiro-cli chat --v3
 ```
 
-Ask plain Kiro to set up a workspace agent for this upgrade exercise:
+Ask Kiro to create a custom agent for this upgrade exercise:
 
 ```text
-Create .kiro/agents/my-windows-upgrade.json as a minimal read-only custom agent.
-
-Configure it with:
-- name: my-windows-upgrade;
-- a description that identifies it as a participant-created Windows EC2
-  clone-upgrade assistant;
-- a prompt that tells it to follow upgrade safety steering, distinguish measured
-  facts from assumptions, never treat an AMI clone as live database
-  synchronization, never recommend an in-place source upgrade, and require
-  evidence before any promotion recommendation;
-- only read, grep, glob, and code in both tools and allowedTools;
-- only README.md and .kiro/steering/safety-rules.md as file resources; and
-- a welcome message that clearly says the agent starts in read-only mode.
-
-Show the proposed JSON and ask for approval before writing it.
+Create .kiro/agents/my-windows-upgrade.json as a read-only custom agent. Include:
+1. Name: my-windows-upgrade
+2. Role: Windows EC2 clone-upgrade assistant
+3. Behavior: follow all workspace steering, use only measured evidence, call out
+   anything that's not verified, never recommend in-place source upgrade
+4. Tools: read, grep, glob, and code only (both tools and allowedTools)
+5. Resources: README.md, all steering files, and the inventory
+6. Welcome message: says the agent starts in read-only mode
 ```
 
 Review the proposed agent. If you agree, approve the write. If you want different behavior, ask Kiro to revise the prompt or description without weakening the safety boundaries.
