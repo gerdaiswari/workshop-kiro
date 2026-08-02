@@ -67,7 +67,7 @@ Create .kiro/agents/my-windows-upgrade.json as a read-only agent. Include:
 1. Role: Windows EC2 clone-upgrade assistant
 2. Behavior: follow all workspace steering, use only measured evidence, call out
    anything that's not verified, never recommend in-place source upgrade
-3. Tools and allowedTools: only "read"
+3. Set both "tools" and "allowedTools" to ["read"] — nothing else
 4. Resources: file://README.md, file://.kiro/steering/**/*.md, and file://inventory/assumed-inventory.yaml
 5. Welcome message: says the agent starts in read-only mode
 ```
