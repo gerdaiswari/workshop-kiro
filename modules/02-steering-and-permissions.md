@@ -52,9 +52,9 @@ Run `/context show` to confirm that `participant-environment.md` is not loaded (
 
 **What you learned:** Kiro can help you create structured documentation — you describe what you need, and it generates the file with the right format.
 
-## 3. Create a minimal read-only agent
+## 3. Create a custom agent
 
-Start plain Kiro again if needed:
+Start plain Kiro:
 
 ```text
 kiro-cli chat --v3
@@ -69,26 +69,17 @@ Create .kiro/agents/my-windows-upgrade.json as a read-only custom agent. Include
 3. Behavior: follow all workspace steering, use only measured evidence, call out
    anything that's not verified, never recommend in-place source upgrade
 4. Tools: read, grep, glob, and code only (both tools and allowedTools)
-5. Resources: file://README.md, file://.kiro/steering/**/*.md, and file://inventory/assumed-inventory.yaml
+5. Resources: README.md, all steering files, and the inventory
 6. Welcome message: says the agent starts in read-only mode
 ```
 
-Review the proposed agent. If you agree, approve the write. If you want different behavior, ask Kiro to revise the prompt or description without weakening the safety boundaries.
+Review the proposed agent. If you agree, approve the write.
 
 This shows that Kiro can help you scaffold configuration files from a natural-language description — you tell it what the agent should do, and it generates valid JSON with the correct schema.
 
-The important fields are:
+Then run `/upgrade-agent` in the same session and select the workspace agents. This adds the `permissions` block that V3 requires.
 
-| Field | Function |
-|---|---|
-| `name` | Set to `my-windows-upgrade`; this is the name used with `--agent` |
-| `description` | Helps people understand when to use the agent |
-| `prompt` | Defines its role, behavior, and safety boundaries |
-| `tools` | Tools the agent is able to request |
-| `allowedTools` | Tools trusted to run without an approval prompt |
-| `resources` | Workspace files loaded as agent context |
-
-Exit Kiro and validate the file.
+Exit Kiro and validate:
 
 **Windows PowerShell:**
 
