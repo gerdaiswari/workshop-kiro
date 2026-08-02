@@ -139,7 +139,7 @@ Inside chat, run:
 
 Select **V2 Workspace** — this tells Kiro to convert the agent files that live in this repository's `.kiro/agents/` folder (as opposed to global agents in your home directory, which are unrelated to this workshop). Kiro converts the workspace agents to universal V2+V3 JSON and creates backup files (so your original V2 JSON is preserved if you need to compare or revert). Do not select unrelated global agents.
 
-Exit and validate the participant agent again using the command from step 3.
+Exit and validate your agent again using the command from step 3.
 
 > **Why this step is not optional:** a V2 JSON agent can be discovered and loaded by the installed CLI, but V3 capability restrictions are not reliably enforced until this conversion runs. In other words, without this step your `deniedCommands` and `deniedPaths` might not actually block anything under V3. Complete the conversion before testing permissions in the next section.
 
@@ -211,7 +211,7 @@ After conversion, inspect:
 - `.kiro/agents/upgrade-reviewer.json` — read-only independent auditor
 - `.kiro/agents/upgrade-executor.json` — restricted routine executor
 
-The references demonstrate separation of duties: one agent plans and coordinates, one only reviews without the ability to change anything, and one only executes a narrow set of approved scripts. This mirrors how you'd divide responsibilities among people on a real operations team. Your participant agent does not need to match them exactly — you'll build your own versions of these specialized roles in Module 10B.
+The references demonstrate separation of duties: one agent plans and coordinates, one only reviews without the ability to change anything, and one only executes a narrow set of approved scripts. This mirrors how you'd divide responsibilities among people on a real operations team. Your own agent does not need to match them exactly — you'll build your own versions of these specialized roles in Module 10B.
 
 > **Windows users:** the reference agents include both `python3` and `py -3` variants for permitted Python commands.
 

@@ -195,7 +195,7 @@ Do not test a real termination request. The direct fake-input test above (step 3
 
 Compare your script with `scripts/hooks/block_destructive.py`. Identify differences in JSON error handling, command coverage, and messages — this is a useful exercise for seeing what a production-grade version of the same idea looks like.
 
-The reference agents intentionally do not embed one hardcoded hook command because the Python launcher differs by workstation (`python3` on Linux/macOS and `py -3` on Windows). Your participant agent uses the workstation-specific hook configuration from step 4.
+The reference agents intentionally do not embed one hardcoded hook command because the Python launcher differs by workstation (`python3` on Linux/macOS and `py -3` on Windows). Your agent uses the workstation-specific hook configuration from step 4.
 
 Hooks are defense in depth; they do not replace IAM or human approval. Think of them as one more layer that catches mistakes early, not the only thing standing between you and a destructive action.
 
