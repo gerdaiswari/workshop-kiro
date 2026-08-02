@@ -4,7 +4,7 @@
 
 Create Kiro workspace steering and a custom agent yourself. Decide which tools it can use, which are trusted, and where it can save files. The workshop provides example agents to learn from — you can create your own.
 
-## 1. Start with plain Kiro
+## 1. Start a chat with Kiro
 
 From the repository root, start Vibe mode without `--agent`:
 
@@ -16,12 +16,12 @@ Ask:
 
 ```text
 What Kiro workspace configuration folders exist in this repository, and what is
-the purpose of steering, agents, skills, hooks, and MCP? Read only; do not edit.
+the purpose of steering, agents, skills, hooks, and MCP?
 ```
 
 This shows that Kiro can read your project files, follow code relationships, and explain your architecture — without you having to configure anything first.
 
-## 2. Create scoped steering without duplicating context
+## 2. Create steering
 
 Steering gives Kiro durable instructions and context. Choose its scope based on where the instructions should apply:
 
@@ -35,8 +35,8 @@ Run `/context show`. The supplied `.kiro/steering/safety-rules.md` is the always
 Instead, create a manual profile for the environment you would assess after the workshop:
 
 ```text
-Create .kiro/steering/participant-environment.md with YAML front matter
-`inclusion: manual`.
+Create `.kiro/steering/participant-environment.md`. Mark it as `inclusion: manual`
+so it won't auto-load into every chat.
 
 Add concise placeholders for source and target Windows versions, server scope,
 application owners, state classification, dependencies, identity constraints,
@@ -47,7 +47,35 @@ Do not copy APP01, DATA01, ports, tags, region, stack name, or synthetic test
 expectations into this profile. Show the proposed file and ask before writing it.
 ```
 
-Restart Kiro and run `/context show` again. The new manual file should not be loaded automatically. Add it deliberately with `/context add` only for an adaptation exercise, then inspect `/context show` again.
+Example for a real production environment (adapt to your own servers):
+
+```yaml
+---
+inclusion: manual
+---
+
+# Participant environment profile
+
+| Field | Value |
+|---|---|
+| Source Windows version | Windows Server 2019 Datacenter |
+| Target Windows version | Windows Server 2025 Standard |
+| Server scope | 3 web servers, 1 database server |
+| Application owners | UNKNOWN |
+| State classification | Web servers: stateless; DB server: stateful |
+| Dependencies | Active Directory, SQL Server 2019, .NET 6 |
+| Identity constraints | Domain-joined, gMSA for services |
+| RTO | 4 hours |
+| RPO | 1 hour |
+| Maintenance window | Saturday 22:00–06:00 UTC |
+| Vendor support | SQL Server 2019 on WS2025: UNKNOWN |
+| Test oracle | UNKNOWN |
+| Backup/restore owner | UNKNOWN |
+| Cutover owner | UNKNOWN |
+| Rollback owner | UNKNOWN |
+```
+
+Run `/context show` to confirm that `participant-environment.md` is not loaded (because it's marked manual). When you start the adaptation exercise, load it manually with `/context add participant-environment.md`. Then run `/context show` again to verify it's now loaded.
 
 **What you learned:** Kiro can help you create structured documentation with the right format and placeholders — you describe what you need, and it generates the file. Steering controls *when* Kiro loads that context: `always` means safety rules are enforced in every conversation; `manual` means environment-specific facts are only loaded when relevant, saving context budget for the actual task.
 
