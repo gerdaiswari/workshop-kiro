@@ -63,30 +63,30 @@ kiro-cli chat --v3
 Ask Kiro to create a custom agent for this upgrade exercise:
 
 ```text
-Create .kiro/agents/my-windows-upgrade.md as a V3 agent in Markdown format. Include:
+Create .kiro/agents/my-windows-upgrade.json as a read-only V3 agent. Include:
 1. Role: Windows EC2 clone-upgrade assistant
 2. Behavior: follow all workspace steering, use only measured evidence, call out
    anything that's not verified, never recommend in-place source upgrade
 3. Tools: read only
 4. Resources: README.md, all steering files, and the inventory
-5. Permissions: allow fs_read
+5. Permissions: allow fs_read only
 6. Welcome message: says the agent starts in read-only mode
 ```
 
-Review the proposed file. V3 agents use Markdown — your system prompt is the document body, configuration is in YAML frontmatter.
+Review the proposed file. Then run `/upgrade-agent` in the same session to ensure V3 compatibility.
 
 Exit Kiro and validate:
 
 **Windows PowerShell:**
 
 ```powershell
-kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.md
+kiro-cli agent validate --path .kiro\agents\my-windows-upgrade.json
 ```
 
 **Linux/macOS Bash:**
 
 ```bash
-kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.md
+kiro-cli agent validate --path .kiro/agents/my-windows-upgrade.json
 ```
 
 Then confirm discovery:
@@ -183,9 +183,9 @@ Permissions are the primary enforcement. Hooks add custom logic (Module 05). IAM
 
 Only after creating your own agent, compare it with the workshop's reference agents:
 
-- `.kiro/agents/windows-upgrade.md` (orchestrator — works on both Linux/macOS and Windows)
-- `.kiro/agents/upgrade-reviewer.md` (read-only independent auditor)
-- `.kiro/agents/upgrade-executor.md` (restricted routine executor)
+- `.kiro/agents/windows-upgrade.json` (orchestrator — works on both Linux/macOS and Windows)
+- `.kiro/agents/upgrade-reviewer.json` (read-only independent auditor)
+- `.kiro/agents/upgrade-executor.json` (restricted routine executor)
 
 These three agents follow the best-practice trust boundary model: **orchestrator** (plans, coordinates, delegates), **reviewer** (audits evidence, cannot fix), and **executor** (runs approved tasks, cannot decide). They represent one way to configure a full upgrade agent set — yours doesn't need to match them exactly.
 

@@ -122,9 +122,9 @@ This shows that Kiro can help you audit your infrastructure against current best
 
 After your MCP exercise works, compare your agent with the reference agents:
 
-- `.kiro/agents/windows-upgrade.md` (orchestrator — has MCP for documentation lookups)
-- `.kiro/agents/upgrade-reviewer.md` (reviewer — has MCP because reviewing requires current docs)
-- `.kiro/agents/upgrade-executor.md` (executor — no MCP, it only runs scripts)
+- `.kiro/agents/windows-upgrade.json` (orchestrator — has MCP for documentation lookups)
+- `.kiro/agents/upgrade-reviewer.json` (reviewer — has MCP because reviewing requires current docs)
+- `.kiro/agents/upgrade-executor.json` (executor — no MCP, it only runs scripts)
 
 Notice which agents receive documentation access and why the execution-focused agent does not need it.
 

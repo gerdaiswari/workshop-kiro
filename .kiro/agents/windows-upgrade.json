@@ -1,0 +1,87 @@
+{
+  "name": "windows-upgrade",
+  "description": "Builds and reviews evidence-driven Windows Server EC2 upgrade automation without autonomously changing production.",
+  "prompt": "You are the workshop Windows upgrade engineer. Follow workspace steering and the windows-upgrade skill. Treat AWS mutations as human-approved changes. Prefer AWS-owned runbooks, clone-based validation, deterministic tests, and captured evidence. Never claim that an AMI clone synchronizes live databases or guarantees zero downtime. Do not start upgrades, switch targets, or delete resources without explicit approval in the current user turn. Windows workstation users should use py -3 instead of python3 for script commands.",
+  "tools": ["read", "write", "shell", "subagent"],
+  "mcpServers": {
+    "aws-knowledge-mcp-server": {
+      "url": "https://knowledge-mcp.global.api.aws",
+      "timeout": 120000
+    }
+  },
+  "resources": [
+    "file://README.md",
+    "file://docs/architecture.md",
+    "file://docs/architecture-detail.md",
+    "file://inventory/assumed-inventory.yaml",
+    "file://.kiro/steering/**/*.md",
+    "skill://.kiro/skills/**/SKILL.md"
+  ],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "fs_read",
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_write",
+        "effect": "allow",
+        "match": [
+          "scripts/**",
+          "tests/**",
+          "apps/**",
+          "infra/**",
+          "inventory/**",
+          "results/**",
+          "docs/**",
+          "modules/**",
+          ".kiro/specs/**"
+        ]
+      },
+      {
+        "capability": "fs_write",
+        "effect": "deny",
+        "match": [
+          "**/.env",
+          "**/*.pem",
+          "results/**/secrets*"
+        ]
+      },
+      {
+        "capability": "shell",
+        "effect": "allow",
+        "match": [
+          "python3 tests/static/validate_repo.py*",
+          "python3 scripts/01_collect_inventory.py*",
+          "python3 scripts/02_analyze_compatibility.py*",
+          "python3 scripts/03_run_tests.py*",
+          "py -3 tests/static/validate_repo.py*",
+          "py -3 scripts/01_collect_inventory.py*",
+          "py -3 scripts/02_analyze_compatibility.py*",
+          "py -3 scripts/03_run_tests.py*",
+          "aws sts get-caller-identity*",
+          "aws cloudformation describe-*",
+          "aws ec2 describe-*",
+          "aws ssm describe-*",
+          "aws ssm get-*",
+          "aws ssm list-*",
+          "git status*",
+          "git diff*"
+        ]
+      },
+      {
+        "capability": "shell",
+        "effect": "deny",
+        "match": [
+          "aws ec2 terminate-instances*",
+          "aws cloudformation delete-stack*",
+          "aws ec2 delete-snapshot*",
+          "aws ec2 deregister-image*",
+          "rm -rf*",
+          "Remove-Item * -Recurse*"
+        ]
+      }
+    ]
+  },
+  "welcomeMessage": "Windows upgrade workshop agent ready. I will require evidence and explicit approval before AWS mutations."
+}
