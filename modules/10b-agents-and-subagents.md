@@ -31,7 +31,6 @@ Choose:
 - One higher-capability model for architecture and independent review — reviewing evidence for blockers and unsupported assumptions benefits from stronger reasoning.
 - One lower-cost model for deterministic, routine inspection — running a script and reporting its output doesn't need the most expensive model available.
 
-At the time this repository was validated, `claude-sonnet-5` and `claude-haiku-4.5` were available. Use them only if they appear in your own output — availability varies by account, so don't assume these exact names will work for you.
 
 ## 2. Create a read-only reviewer agent
 
