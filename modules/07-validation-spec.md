@@ -11,13 +11,20 @@ Module 06 produced an upgraded AMI for each server, but an AMI sitting in your a
 
 ## 1. Launch validation copies
 
-Each command requires approval, launches from a recorded upgraded AMI, enforces IMDSv2 (a more secure way for the instance to fetch its metadata, blocking a common SSRF attack path), waits for EC2 and SSM readiness, and records the new instance ID. These validation instances are separate from your source APP01/DATA01 — nothing here touches the servers that are still running Windows Server 2019.
+Run each command **one at a time** — wait for it to finish before starting the next. Each command requires typed confirmation (type the value shown in the prompt), launches from a recorded upgraded AMI, enforces IMDSv2 (a more secure way for the instance to fetch its metadata, blocking a common SSRF attack path), waits for EC2 and SSM readiness, and records the new instance ID. These validation instances are separate from your source APP01/DATA01 — nothing here touches the servers that are still running Windows Server 2019.
+
+> **Do not paste both commands together.** The confirmation prompt in the first command will consume text from the second command as input, causing both to fail silently. Run APP01 first, wait for it to complete (you will see the `results/validation/state.json` path printed), then run DATA01.
 
 **Windows PowerShell:**
 
 ```powershell
 py -3 scripts\05_launch_validation.py --server APP01 `
   --region us-east-1 --stack-name kiro-ws2025-lab
+```
+
+Wait for completion, then:
+
+```powershell
 py -3 scripts\05_launch_validation.py --server DATA01 `
   --region us-east-1 --stack-name kiro-ws2025-lab
 ```
@@ -27,6 +34,11 @@ py -3 scripts\05_launch_validation.py --server DATA01 `
 ```bash
 python3 scripts/05_launch_validation.py --server APP01 \
   --region us-east-1 --stack-name kiro-ws2025-lab
+```
+
+Wait for completion, then:
+
+```bash
 python3 scripts/05_launch_validation.py --server DATA01 \
   --region us-east-1 --stack-name kiro-ws2025-lab
 ```

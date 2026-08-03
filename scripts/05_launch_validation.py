@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import time
 from typing import Any
 
@@ -32,17 +33,18 @@ def main() -> int:
         "Name": role, "Project": "kiro-ws2025-workshop", "Environment": "validation",
         "Role": role, "SourceInstanceId": source_id, "UpgradeExecutionId": upgrade["execution_id"],
     }.items()]
+    tag_spec = json.dumps([{"ResourceType": "instance", "Tags": tags}])
     response = aws.call([
         "ec2", "run-instances",
         "--image-id", upgrade["upgraded_ami_id"],
         "--instance-type", source["InstanceType"],
-        "--min-count", "1", "--max-count", "1",
+        "--count", "1",
         "--subnet-id", outputs["PublicSubnetId"],
         "--security-group-ids", outputs["WorkloadSecurityGroupId"],
         "--associate-public-ip-address",
         "--iam-instance-profile", f"Name={outputs['InstanceProfileName']}",
         "--metadata-options", "HttpTokens=required,HttpEndpoint=enabled,HttpPutResponseHopLimit=1",
-        "--tag-specifications", __import__("json").dumps([{"ResourceType": "instance", "Tags": tags}]),
+        "--tag-specifications", tag_spec,
     ])
     instance_id = response["Instances"][0]["InstanceId"]
     print(f"Launched {instance_id}; waiting for EC2 status checks", flush=True)

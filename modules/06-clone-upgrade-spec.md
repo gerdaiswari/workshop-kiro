@@ -135,7 +135,35 @@ After both terminals show an automation execution ID/status, take the scheduled 
 
 Periodically inspect both upgrade terminals. Do **not** continue to Module 07 until both scripts report `Success` and both evidence files contain an `upgraded_ami_id`.
 
-## 4. Inspect an execution
+## 4. Recover from interrupted polling
+
+If the script's polling loop crashes (network disconnection, laptop sleep, expired credentials) while the AWS automation continues running in the background, the evidence file will be left in an `InProgress` state without the final AMI ID. The upgrade itself is unaffected — it runs server-side in Systems Manager.
+
+To recover the evidence without re-running the automation:
+
+**Windows PowerShell:**
+
+```powershell
+py -3 scripts\04_start_upgrade.py --recover `
+  --server APP01 --region us-east-1
+py -3 scripts\04_start_upgrade.py --recover `
+  --server DATA01 --region us-east-1
+```
+
+**Linux/macOS Bash:**
+
+```bash
+python3 scripts/04_start_upgrade.py --recover \
+  --server APP01 --region us-east-1
+python3 scripts/04_start_upgrade.py --recover \
+  --server DATA01 --region us-east-1
+```
+
+This reads the execution ID from the existing evidence file, queries AWS for the current status, and updates the evidence with the final result (including the upgraded AMI ID if the automation succeeded). Run it after refreshing your AWS credentials.
+
+**How to tell if you need recovery:** If the script exited with a network error (e.g., `Could not connect to the endpoint URL`) but the SSM console shows `Success`, use `--recover`. If the script is still running and showing status updates, leave it alone.
+
+## 5. Inspect an execution
 
 The AWS CLI command is identical on all platforms when written on one line:
 

@@ -37,6 +37,40 @@ def select_target_version_parameter(parameter_names: set[str]) -> str:
     raise ValueError(f"Runbook exposes neither {expected}; available parameters: {available}")
 
 
+def recover(aws: AwsContext, server: str) -> int:
+    """Recover evidence from a previously started upgrade whose polling was interrupted."""
+    path = RESULTS / f"upgrades/{server}.json"
+    if not path.exists():
+        raise SystemExit(f"No existing evidence file at {path}; nothing to recover.")
+    evidence = read_json(path)
+    execution_id = evidence.get("execution_id")
+    if not execution_id:
+        raise SystemExit("Evidence file does not contain an execution_id.")
+    print(f"Recovering status for {server} execution {execution_id}...")
+    execution = aws.call(["ssm", "get-automation-execution", "--automation-execution-id", execution_id])["AutomationExecution"]
+    status = execution["AutomationExecutionStatus"]
+    print(f"Current status: {status}")
+    evidence.update({
+        "last_polled_at": utc_now(), "status": status,
+        "automation_execution": execution,
+    })
+    if status in TERMINAL:
+        candidates = ami_candidates(execution.get("Outputs", {}))
+        upgrade_named = [ami for key, ami in candidates if "upgrade" in key.lower() or "imageid" in key.lower()]
+        upgraded_ami = upgrade_named[-1] if upgrade_named else (candidates[-1][1] if candidates else None)
+        evidence["ami_candidates"] = [{"output": key, "ami_id": ami} for key, ami in candidates]
+        evidence["upgraded_ami_id"] = upgraded_ami
+        evidence["completed_at"] = utc_now()
+        print(f"Upgrade {status}. AMI: {upgraded_ami or 'none found'}")
+    else:
+        print(f"Upgrade still {status}; evidence updated but not yet complete.")
+    write_json(path, evidence)
+    print(path)
+    if status != "Success":
+        return 1
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", required=True, choices=("APP01", "DATA01"))
@@ -45,8 +79,13 @@ def main() -> int:
     parser.add_argument("--stack-name", default="kiro-ws2025-lab")
     parser.add_argument("--yes", action="store_true")
     parser.add_argument("--poll-seconds", type=int, default=30)
+    parser.add_argument("--recover", action="store_true",
+                        help="Fetch final status from AWS for a previously interrupted upgrade.")
     args = parser.parse_args()
     aws = AwsContext(args.region, args.profile)
+
+    if args.recover:
+        return recover(aws, args.server)
 
     document = aws.call(["ssm", "describe-document", "--name", RUNBOOK_NAME])["Document"]
     document_version = str(document["DocumentVersion"])
