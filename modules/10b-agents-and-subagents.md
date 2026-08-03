@@ -123,14 +123,15 @@ Ask plain Kiro to create `.kiro/agents/participant-executor.json`. Replace `AVAI
 
 This executor can run only the listed local checks. It cannot call AWS — its `deniedCommands` list explicitly blocks any `aws *` command, so even if you ask it to, it structurally cannot make an AWS API call. This makes it safe to run routine checks with, without worrying about scope creep.
 
-## 4. Validate the agents you created
+## 4. Validate and discover the agents you created
+
+First, exit Kiro and validate each configuration from the repository root. This formal check verifies valid JSON syntax, required fields, the agent schema, and tool references. The `/agent` picker does not perform these checks, so do not skip validation.
 
 **Windows PowerShell:**
 
 ```powershell
 kiro-cli agent validate --path .kiro\agents\participant-reviewer.json
 kiro-cli agent validate --path .kiro\agents\participant-executor.json
-kiro-cli agent list
 ```
 
 **Linux/macOS Bash:**
@@ -138,18 +139,25 @@ kiro-cli agent list
 ```bash
 kiro-cli agent validate --path .kiro/agents/participant-reviewer.json
 kiro-cli agent validate --path .kiro/agents/participant-executor.json
-kiro-cli agent list
 ```
 
-If validation reports an unavailable model, return to `--list-models`, use an exact ID (copy it exactly, since a typo or a deprecated name will fail validation), and validate again.
+If validation reports an unavailable model, start an interactive chat, run `/model`, select an available model, update the exact model ID in the agent file, and validate again.
 
-The two files were created with V2 portability fields. Convert only the newly listed V2 workspace agents before testing their V3 tool boundaries — this is the same `/upgrade-agent` conversion step from Module 02, now applied to these two new agent files:
+After both files validate, start plain Kiro from the repository root:
 
 ```text
 kiro-cli chat --v3
 ```
 
-Run `/upgrade-agent`, select **V2 Workspace**, and confirm the listed agents are `participant-reviewer` and `participant-executor`. Exit and validate both files again.
+Inside chat, run:
+
+```text
+/agent
+```
+
+The agent picker should show `participant-reviewer` and `participant-executor` as workspace agents. This confirms that Kiro can discover and select them in the current workspace. If either name is missing, exit the picker, confirm that the JSON file is under `.kiro/agents/`, and rerun validation. You do not need `kiro-cli agent list` for this workshop check.
+
+The two files were created with V2 portability fields. In the same plain Kiro session, run `/upgrade-agent`, select **V2 Workspace**, and confirm the listed agents are `participant-reviewer` and `participant-executor`. This is the same conversion step from Module 02, now applied to these two new agent files. Exit Kiro and validate both files again using the commands above before testing their V3 tool boundaries.
 
 ## 5. Use each specialized agent directly
 
