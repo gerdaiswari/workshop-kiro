@@ -16,7 +16,7 @@ AWS credentials exported as environment variables apply only to the terminal whe
 **Linux/macOS Bash:**
 
 ```bash
-cd /path/to/kiro-ws2025-workshop
+cd /path/to/kiro-workshop-file
 export AWS_DEFAULT_REGION="us-east-1"
 export AWS_ACCESS_KEY_ID="<from lab>"
 export AWS_SECRET_ACCESS_KEY="<from lab>"
@@ -27,7 +27,7 @@ aws sts get-caller-identity --region us-east-1
 **Windows PowerShell:**
 
 ```powershell
-cd C:\path\to\kiro-ws2025-workshop
+cd C:\path\to\kiro-workshop-file
 $env:AWS_DEFAULT_REGION="us-east-1"
 $env:AWS_ACCESS_KEY_ID="<from lab>"
 $env:AWS_SECRET_ACCESS_KEY="<from lab>"

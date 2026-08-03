@@ -34,13 +34,13 @@ Git is only needed if you clone the repository. If you received the workshop as 
 **Windows PowerShell:**
 
 ```powershell
-cd C:\path\to\kiro-ws2025-workshop
+cd C:\path\to\kiro-workshop-file
 ```
 
 **Linux/macOS Bash:**
 
 ```bash
-cd /path/to/kiro-ws2025-workshop
+cd /path/to/kiro-workshop-file
 ```
 
 All later Kiro commands must be run from this directory.
